@@ -40,7 +40,7 @@ pluginBundle {
 
     plugins {
         androidEmulatorPlugin {
-            displayName = 'Automatic Android Emulator'
+            displayName = 'Automated Android Emulator for easing development and testing'
         }
     }
 }

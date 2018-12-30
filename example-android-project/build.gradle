@@ -4,7 +4,7 @@ buildscript {
     project.ext.ANDROID_GRADLE_VERSION_NEW = Boolean.valueOf(env.getOrDefault('ANDROID_GRADLE_VERSION_NEW', 'true'))
     project.ext.ANDROID_EMULATOR_SDK_VERSION = Integer.valueOf(env.getOrDefault('ANDROID_EMULATOR_SDK_VERSION', '21'))
     project.ext.ANDROID_EMULATOR_GOOGLE_APIS = Boolean.valueOf(env.getOrDefault('ANDROID_EMULATOR_GOOGLE_APIS', 'false'))
-    project.ext.ANDROID_EMULATOR_ABI = env.getOrDefault('ANDROID_EMULATOR_ABI', 'x86')
+    project.ext.ANDROID_EMULATOR_ABI = env.getOrDefault('ANDROID_EMULATOR_ABI', 'armeabi-v7a')
     project.ext.ENABLE_FOR_ANDROID_TESTS = Boolean.valueOf(env.getOrDefault('ENABLE_FOR_ANDROID_TESTS', 'true'))
 
     repositories {

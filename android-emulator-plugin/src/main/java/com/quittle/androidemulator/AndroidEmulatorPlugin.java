@@ -135,6 +135,7 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
         }
         final ProcessBuilder pb = new ProcessBuilder(command.toArray(new String[0]));
         pb.environment().putAll(emulatorConfiguration.getEnvironmentVariableMap());
+        pb.inheritIO();
 
         final AtomicReference<Process> process = new AtomicReference<>();
 
