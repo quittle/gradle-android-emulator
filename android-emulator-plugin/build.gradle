@@ -1,0 +1,77 @@
+plugins {
+    id 'findbugs'
+    id 'java-gradle-plugin'
+    id 'com.gradle.plugin-publish' version '0.10.0'
+    id 'maven-publish'
+    id 'pmd'
+}
+
+repositories {
+    google()
+    jcenter()
+}
+
+group = 'com.quittle'
+version = '0.0.1'
+
+gradlePlugin {
+    plugins {
+        setupAndroidSdkPlugin {
+            id = 'com.quittle.android-emulator'
+            implementationClass = 'com.quittle.androidemulator.AndroidEmulatorPlugin'
+        }
+    }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifactId = 'android-emulator'
+            from components.java
+        }
+    }
+}
+
+pluginBundle {
+    website = 'https://github.com/quittle/gradle-android-emulator'
+    vcsUrl = 'https://github.com/quittle/gradle-android-emulator'
+    description = 'Automatically installs and sets up the Android emulator for easy running of instrumentation tests.'
+    tags = ['android', 'android emulator', 'emulator', 'automation', 'instrumentation']
+
+    plugins {
+        androidEmulatorPlugin {
+            displayName = 'Automatic Android Emulator'
+        }
+    }
+}
+
+dependencies {
+    implementation 'com.android.tools.build:gradle:3.2.1'
+    implementation 'commons-io:commons-io:2.6'
+    implementation 'org.apache.logging.log4j:log4j-iostreams:2.11.1'
+
+    compileOnly 'com.google.code.findbugs:annotations:3.0.1'
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs << '-Xlint:all' << '-Werror' << '-proc:none'
+}
+
+tasks.withType(FindBugs) {
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+}
+
+javadoc {
+    failOnError true
+    options.addStringOption 'Xwerror', '-quiet' // See https://stackoverflow.com/a/49544352
+}
+
+findbugs {
+    effort 'max'
+    reportLevel 'low'
+}
+
+defaultTasks 'assemble', 'javadoc', 'check'

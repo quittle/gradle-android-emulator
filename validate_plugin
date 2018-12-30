@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+# Validate that the plugin works correctly.
+
+set -e
+
+# Clean up possibly existing files to ensure a fresh start
+rm -f 'example-android-project/local.properties'
+rm -rf 'example-android-project/build'
+rm -rf 'android-emulator-plugin/build'
+
+# Plugin locally to be consumed by example project
+./gradlew -p android-emulator-plugin publishToMavenLocal
+
+# Base
+./gradlew -p example-android-project connectedCheck
+
+# Use a new Gradle plugin and an older SDK version
+ANDROID_GRADLE_VERSION=3.2.1 ANDROID_GRADLE_VERSION_NEW=true ANDROID_EMULATOR_SDK_VERSION=21 ./gradlew -p example-android-project connectedCheck
+
+# Change the SDK version, enable google_apis flavor, and a non-x86 abi
+ANDROID_EMULATOR_SDK_VERSION=15 ANDROID_EMULATOR_GOOGLE_APIS=true ANDROID_EMULATOR_ABI=armeabi-v7a ./gradlew -p example-android-project connectedCheck
+
+# Validate that the emulator is needed or the tests would fail
+ENABLE_FOR_ANDROID_TESTS=false ./gradlew -p example-android-project connectedCheck && \
+        echo 'Build should not have succeeded' && exit 1 || \
+        echo 'Build failure expected due to "No connected devices!"'
+
+# Use the old Gradle plugin with a newer sdk version
+ANDROID_GRADLE_VERSION=2.3.3 ANDROID_GRADLE_VERSION_NEW=false ANDROID_EMULATOR_SDK_VERSION=27 ./gradlew -p example-android-project connectedCheck

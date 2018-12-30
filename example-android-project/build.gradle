@@ -1,0 +1,79 @@
+buildscript {
+    final Map<String, String> env = System.getenv()
+    project.ext.ANDROID_GRADLE_VERSION = env.getOrDefault('ANDROID_GRADLE_VERSION', '3.2.1')
+    project.ext.ANDROID_GRADLE_VERSION_NEW = Boolean.valueOf(env.getOrDefault('ANDROID_GRADLE_VERSION_NEW', 'true'))
+    project.ext.ANDROID_EMULATOR_SDK_VERSION = Integer.valueOf(env.getOrDefault('ANDROID_EMULATOR_SDK_VERSION', '21'))
+    project.ext.ANDROID_EMULATOR_GOOGLE_APIS = Boolean.valueOf(env.getOrDefault('ANDROID_EMULATOR_GOOGLE_APIS', 'false'))
+    project.ext.ANDROID_EMULATOR_ABI = env.getOrDefault('ANDROID_EMULATOR_ABI', 'x86')
+    project.ext.ENABLE_FOR_ANDROID_TESTS = Boolean.valueOf(env.getOrDefault('ENABLE_FOR_ANDROID_TESTS', 'true'))
+
+    repositories {
+        google()
+        jcenter()
+        mavenLocal()
+    }
+
+    dependencies {
+        classpath 'com.quittle:android-emulator:+'
+        classpath "com.android.tools.build:gradle:${ANDROID_GRADLE_VERSION}"
+    }
+}
+
+plugins {
+    id 'com.quittle.setup-android-sdk' version '0.1.0'
+}
+
+apply plugin: 'com.android.application'
+apply plugin: 'com.quittle.android-emulator'
+
+allprojects {
+    repositories {
+        google()
+        jcenter()
+    }
+}
+
+android {
+    compileSdkVersion 28
+    buildToolsVersion '28.0.3'
+
+    defaultConfig {
+        minSdkVersion 14
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+
+    if (ANDROID_GRADLE_VERSION_NEW) {
+        testOptions {
+            execution 'ANDROIDX_TEST_ORCHESTRATOR'
+        }
+    }
+
+    useLibrary 'android.test.runner'
+}
+
+dependencies {
+    if (ANDROID_GRADLE_VERSION_NEW) {
+        androidTestImplementation 'androidx.test:runner:1.1.1'
+        androidTestImplementation 'androidx.test.ext:junit:1.1.0'
+        androidTestUtil 'androidx.test:orchestrator:1.1.1'
+    } else {
+        androidTestCompile 'androidx.test:runner:1.1.1'
+        androidTestCompile 'androidx.test.ext:junit:1.1.0'
+    }
+}
+
+androidEmulator {
+    emulator {
+        sdkVersion ANDROID_EMULATOR_SDK_VERSION
+        sdkVersion = ANDROID_EMULATOR_SDK_VERSION
+
+        abi ANDROID_EMULATOR_ABI
+        abi = ANDROID_EMULATOR_ABI
+
+        includeGoogleApis ANDROID_EMULATOR_GOOGLE_APIS
+        includeGoogleApis = ANDROID_EMULATOR_GOOGLE_APIS
+    }
+
+    enableForAndroidTests ENABLE_FOR_ANDROID_TESTS
+    enableForAndroidTests = ENABLE_FOR_ANDROID_TESTS
+}

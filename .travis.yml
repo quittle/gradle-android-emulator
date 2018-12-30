@@ -1,0 +1,17 @@
+env:
+    # GRADLE_PUBLISH_KEY
+    - secure: JfKDfsVgNBKpXn4LWM8Jh87UibdSp8lLYW2wwmeUYiGt2NW1AA2NLh62CaULwW1dia8zFG+4HP1AAbRPKi/BMwPBKGJ4Nha01XFQEQMAa8HEeMA+BBL8EfVjoSTURJkJZDGv0uwjerF8mwGRzPc4NWKlsCGLh6ryoU9W88c9Em0jZpjMgCkKxfDJt5oE5GkIPELHaquMTqInn0mGzN+F+gPUB5YfQsQSgb34ulZkGYBcfmxpPWV3qa3Ec0Hpmq2Kk96RJUZ8k+U32BQGn5mG+dxKiCjQLtoC9uhuM6ICALUA47b1lrT2YsQhLqqLIRa2lrqchMlgewGu2DWeu/19JRjIPTU5VainS7hFfG3s8lKHEHsWNfUf+Llvqe5HMQPv8ozUvdh17ChdKrZVTh1KyVTkSjImpI7lHer8SKzNidWPDTltFx+8PVMmQ5tM2wCGQdjVnIz6x4kt0/EI3tIz+zWNYDtfxcqYhPcem0MNwBmFqlvF8ULlD9MFGsynLMoYYWeqE5e9EYO2VwZN1XTRJlZ5b+0rM3NtgVhyplZ+f+ANVRKD0ArqjeOuA7DO6ILAlZHrQI74UGG6kHcS2kA9DfYYdxg7szcsQUWtmrdEdIxFgDf/qcVs+TSlT4HxINe9SM0lRL8B9DjHzdnD7MUZsGHi/0dKLQqtGTtPC8R2s78=
+    # GRADLE_PUBLISH_SECRET
+    - secure: p60p+BM4KCa4BfcLzdftrsAIShZS5b7deIooH75XlMF7WuvnpD48FB8QxdIEQA/rYTLXUx0ZJTLnCm4bp9HY7EhxnlUt27atjACkvwhUhIt9qqHt+XSOlV177yM5h9niAJJJAxGpo8O2+cEy4OvCBjJA5A7ZF2l3xnehc4qU+563C4eUB1PDDt3nF7M7XAQrSh9Ycovwp6000hT8laGsMxA/zetAF0emPOTp9QdblTRsty4JGuzok9kd0upBSEOd0jrlybuAuiH8obHczoG4eKe6PsZ+PZwnXkCs82fsCY0eGQcbUFcWN4Gr/w0RyGrveKme5lF2C+J0k1Y/PNrL/yG890l7MkLfUsiHIexOnYhwwCvT+XL6JN5yWc/2ple7CA7gs+aMWeyiXPXXNmQFl0PE3uWKdszrOfqGhoC2i6i4EJy3V419EETO8vRuIUO7I0/yBewsnWaAmk6V9AaWZR5YUn/cz0SiC95kFsiJsYgbbaOJlyVjTZ27CQgHxCz1sEE+qiust9MnLeroFxRsD/szDXlIyP9UDMnJ2bswQyv4UM47NX7bHxo9clq04O51SKaPD8hu3L6PmdZR/Des2VYSp1lrR/+5JIytteFELaKmKuZebux/p0Y4GHIX6dJC6P7l2z46RZ1B6Git0QsXeCp9u3NNlfT74hSMbrrERrU=
+    - GRADLE_OPTS="-Dorg.gradle.console=plain -Dgradle.publish.key='$GRADLE_PUBLISH_KEY' -Dgradle.publish.secret='$GRADLE_PUBLISH_SECRET'"
+language: java
+install: true
+script:
+    - ./gradlew -p android-emulator-plugin
+    - ./validate_plugin
+deploy:
+    - provider: script
+      script: ./gradlew -p android-emulator-plugin publishPlugins
+      on:
+        branch: master
+        tags: true
