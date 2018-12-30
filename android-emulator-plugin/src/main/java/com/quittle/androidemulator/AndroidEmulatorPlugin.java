@@ -124,7 +124,16 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
     }
 
     private static void createStartStopEmulatorTasks(final Project project, final EmulatorConfiguration emulatorConfiguration) {
-        final ProcessBuilder pb = new ProcessBuilder(emulatorConfiguration.getEmulator().getAbsolutePath(), "@" + emulatorConfiguration.getEmulatorName(), "-shell");
+        final List<String> command = new ArrayList<>();
+        command.add(emulatorConfiguration.getEmulator().getAbsolutePath());
+        command.add("@" + emulatorConfiguration.getEmulatorName());
+        command.add("-shell");
+        if (emulatorConfiguration.getHeadless()) {
+            command.add("-no-skin");
+            command.add("-no-audio");
+            command.add("-no-window");
+        }
+        final ProcessBuilder pb = new ProcessBuilder(command.toArray(new String[0]));
         pb.environment().putAll(emulatorConfiguration.getEnvironmentVariableMap());
 
         final AtomicReference<Process> process = new AtomicReference<>();

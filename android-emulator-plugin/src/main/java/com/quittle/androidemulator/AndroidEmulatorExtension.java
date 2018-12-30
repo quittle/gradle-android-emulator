@@ -66,6 +66,7 @@ public class AndroidEmulatorExtension {
     private final EmulatorExtension emulator = new EmulatorExtension();
     private File avdRoot = null;
     private boolean enableForAndroidTests = true;
+    private boolean headless = false;
 
     public EmulatorExtension getEmulator() {
         return this.emulator;
@@ -97,5 +98,17 @@ public class AndroidEmulatorExtension {
 
     public boolean getEnableForAndroidTests() {
         return this.enableForAndroidTests;
+    }
+
+    public void headless(final boolean headless) {
+        this.headless = headless;
+    }
+
+    public void setHeadless(final boolean headless) {
+        this.headless = headless;
+    }
+
+    public boolean getHeadless() {
+        return this.headless;
     }
 }

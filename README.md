@@ -38,6 +38,7 @@ androidEmulator {
 
     enableForAndroidTests false // Defaults to false
     avdRoot '~/.android/avd' // Defaults to be <gradle-build-dir>/android-avd-root
+    headless true // Defaults to false but should be set to true for most CI systems
 }
 ```
 

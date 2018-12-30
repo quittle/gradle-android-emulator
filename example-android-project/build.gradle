@@ -8,9 +8,9 @@ buildscript {
     project.ext.ENABLE_FOR_ANDROID_TESTS = Boolean.valueOf(env.getOrDefault('ENABLE_FOR_ANDROID_TESTS', 'true'))
 
     repositories {
+        mavenLocal()
         google()
         jcenter()
-        mavenLocal()
     }
 
     dependencies {
@@ -76,4 +76,7 @@ androidEmulator {
 
     enableForAndroidTests ENABLE_FOR_ANDROID_TESTS
     enableForAndroidTests = ENABLE_FOR_ANDROID_TESTS
+
+    headless true
+    headless = true
 }
