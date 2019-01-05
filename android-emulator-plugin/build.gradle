@@ -32,7 +32,7 @@ version = Git.open(project.rootDir.parentFile)
 
 gradlePlugin {
     plugins {
-        setupAndroidSdkPlugin {
+        androidEmulatorPlugin {
             id = 'com.quittle.android-emulator'
             implementationClass = 'com.quittle.androidemulator.AndroidEmulatorPlugin'
         }
