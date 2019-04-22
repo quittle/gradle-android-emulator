@@ -21,6 +21,7 @@ import org.gradle.api.tasks.AbstractExecTask;
 import org.gradle.api.tasks.Exec;
 import org.gradle.api.tasks.TaskInstantiationException;
 
+@SuppressWarnings("PMD.DataflowAnomalyAnalysis")
 public class AndroidEmulatorPlugin implements Plugin<Project> {
     public static final String ENSURE_ANDROID_EMULATOR_PERMISSIONS_TASK_NAME = "ensureAndroidEmulatorPermissions";
     public static final String INSTALL_ANDROID_EMULATOR_TASK_NAME = "installAndroidEmulator";

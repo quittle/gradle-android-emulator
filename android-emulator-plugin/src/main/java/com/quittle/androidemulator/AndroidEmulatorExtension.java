@@ -7,6 +7,7 @@ import java.io.File;
 /**
  * Provides configuration for {@link AndroidEmulatorPlugin}.
  */
+@SuppressWarnings("PMD.AvoidFieldNameMatchingMethodName")
 public class AndroidEmulatorExtension {
     public static class EmulatorExtension {
         private String name = null;
