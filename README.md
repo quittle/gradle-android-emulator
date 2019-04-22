@@ -1,4 +1,4 @@
-# Android Emulator Plugin [![Gradle Plugin Version](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/com/quittle/android-emulator-plugin/maven-metadata.xml.svg?label=Gradle+Plugin+Version)](https://plugins.gradle.org/plugin/com.quittle.android-emulator) [![Build Status](https://travis-ci.org/quittle/gradle-android-emulator.svg?branch=master)](https://travis-ci.org/quittle/gradle-android-emulator)
+# Android Emulator Plugin [![Gradle Plugin Version](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/com/quittle/android-emulator-plugin/maven-metadata.xml.svg?label=Gradle+Plugin+Version)](https://plugins.gradle.org/plugin/com.quittle.android-emulator) [![Build Status](https://travis-ci.com/quittle/gradle-android-emulator.svg?branch=master)](https://travis-ci.com/quittle/gradle-android-emulator)
 
 This plugin adds tasks that install an Android emulator and start it up when running instrumentation tests
 installs the Android Emulator and starts it up when running the instrumentation tests. Includes configuration
@@ -57,7 +57,7 @@ $ ./validate_plugin # Integration test to validate the plugin works
 ```
 
 ## Deployment
-This package is deployed via [Travis CI](https://travis-ci.org/quittle/gradle-android-emulator).
+This package is deployed via [Travis CI](https://travis-ci.com/quittle/gradle-android-emulator).
 See `.travis.yml` for the CI/CD setup.
 
 In the configuration for the build on Travis, `GRADLE_PUBLISH_KEY` and `GRADLE_PUBLISH_SECRET` are
