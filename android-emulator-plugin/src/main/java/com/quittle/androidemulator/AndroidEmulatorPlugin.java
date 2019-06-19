@@ -187,7 +187,7 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
                                        final String name,
                                        final Action<AbstractExecTask<Exec>> configure) {
         return project.getTasks().create(name, Exec.class, (final Exec task) -> {
-            task.setEnvironment(emulatorConfiguration.getEnvironmentVariableMap());
+            task.environment(emulatorConfiguration.getEnvironmentVariableMap());
 
             configure.execute(task);
 
