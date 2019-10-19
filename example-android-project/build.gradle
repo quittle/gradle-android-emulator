@@ -6,6 +6,7 @@ buildscript {
     project.ext.ANDROID_EMULATOR_GOOGLE_APIS = Boolean.valueOf(env.getOrDefault('ANDROID_EMULATOR_GOOGLE_APIS', 'false'))
     project.ext.ANDROID_EMULATOR_ABI = env.getOrDefault('ANDROID_EMULATOR_ABI', 'armeabi-v7a')
     project.ext.ENABLE_FOR_ANDROID_TESTS = Boolean.valueOf(env.getOrDefault('ENABLE_FOR_ANDROID_TESTS', 'true'))
+    project.ext.LOG_ANDROID_EMULATOR = Boolean.valueOf(env.getOrDefault('LOG_ANDROID_EMULATOR', 'false'))
 
     repositories {
         mavenLocal()
@@ -79,4 +80,7 @@ androidEmulator {
 
     headless true
     headless = true
+
+    logEmulatorOutput LOG_ANDROID_EMULATOR
+    logEmulatorOutput = LOG_ANDROID_EMULATOR
 }

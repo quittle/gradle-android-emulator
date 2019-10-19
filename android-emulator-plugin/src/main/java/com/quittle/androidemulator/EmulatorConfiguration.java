@@ -18,6 +18,7 @@ class EmulatorConfiguration {
     private final Map<String, String> environmentVariableMap;
     private final boolean enableForAndroidTests;
     private final boolean headless;
+    private final boolean logEmulatorOutput;
     private final String androidVersion;
     private final String flavor;
     private final String abi;
@@ -34,14 +35,16 @@ class EmulatorConfiguration {
         if (androidEmulatorExtension.getAvdRoot() != null) {
             this.avdRoot = androidEmulatorExtension.getAvdRoot();
         } else {
-            this. avdRoot = new File(project.getBuildDir(), "android-avd-root");
+            this.avdRoot = new File(project.getBuildDir(), "android-avd-root");
         }
 
         this.environmentVariableMap = ImmutableMap.of(
                 "ANDROID_SDK_ROOT", sdkRoot.getAbsolutePath(),
+                "ANDROID_HOME", sdkRoot.getAbsolutePath(),
                 "ANDROID_AVD_HOME", avdRoot.getAbsolutePath());
         this.enableForAndroidTests = androidEmulatorExtension.getEnableForAndroidTests();
         this.headless = androidEmulatorExtension.getHeadless();
+        this.logEmulatorOutput = androidEmulatorExtension.getLogEmulatorOutput();
 
         final AndroidEmulatorExtension.EmulatorExtension emulator = androidEmulatorExtension.getEmulator();
         int sdkVersion = emulator.getSdkVersion();
@@ -107,6 +110,10 @@ class EmulatorConfiguration {
 
     boolean getHeadless() {
         return headless;
+    }
+
+    boolean getLogEmulatorOutput() {
+        return logEmulatorOutput;
     }
 
     String getAndroidVersion() {

@@ -8,14 +8,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
+import org.apache.commons.io.IOUtils;
 
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.logging.Logger;
 import org.gradle.api.Task;
 import org.gradle.api.tasks.AbstractExecTask;
 import org.gradle.api.tasks.Exec;
@@ -137,6 +140,8 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
     }
 
     private static void createStartStopEmulatorTasks(final Project project, final EmulatorConfiguration emulatorConfiguration) {
+        final boolean logEmulatorOutput = emulatorConfiguration.getLogEmulatorOutput();
+
         final List<String> command = new ArrayList<>();
         command.add(emulatorConfiguration.getEmulator().getAbsolutePath());
         command.add("@" + emulatorConfiguration.getEmulatorName());
@@ -148,7 +153,9 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
         }
         final ProcessBuilder pb = new ProcessBuilder(command.toArray(new String[0]));
         pb.environment().putAll(emulatorConfiguration.getEnvironmentVariableMap());
-        pb.inheritIO();
+        if (!logEmulatorOutput) {
+             pb.inheritIO();
+        }
 
         final AtomicReference<Process> process = new AtomicReference<>();
 
@@ -156,7 +163,11 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
             task.doFirst(t -> {
                 project.getLogger().debug("Starting emulator with command {} {}", pb.environment(), pb.command());
                 try {
-                    process.set(pb.start());
+                    final Process directProcess = pb.start();
+                    process.set(directProcess);
+                    if (logEmulatorOutput) {
+                        logOutput(directProcess, project.getLogger());
+                    }
                     Runtime.getRuntime().addShutdownHook(new Thread(() -> process.getAndUpdate(DESTROY_AND_REPLACE_WITH_NULL)));
                 } catch (final IOException e) {
                     throw new RuntimeException("Emulator failed to start successfully", e);
@@ -175,11 +186,34 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
         });
     }
 
+    /**
+     * Logs emulator output via new threads.
+     * @param process The process to log the output of
+     * @param logger The logger to report output with
+     */
+    private static void logOutput(final Process process, final Logger logger) {
+        final InputStream stdout = process.getInputStream();
+        final InputStream stderr = process.getErrorStream();
+        new Thread(() -> {
+            try {
+                IOUtils.lineIterator(stdout, StandardCharsets.UTF_8).forEachRemaining(s -> logger.info("[Android Emulator - STDOUT] " + s));
+            } catch (IOException e) {
+                logger.error("Error reading Android emulator stdout", e);
+            }
+        }).start();
+        new Thread(() -> {
+            try {
+                IOUtils.lineIterator(stderr, StandardCharsets.UTF_8).forEachRemaining(s -> logger.info("[Android Emulator - STDERR] " + s));
+            } catch (IOException e) {
+                logger.error("Error reading Android emulator stderr", e);
+            }
+        }).start();
+    }
+
     private static void createWaitForEmulatorTask(final Project project, final EmulatorConfiguration emulatorConfiguration) {
         createExecTask(project, emulatorConfiguration, WAIT_FOR_ANDROID_EMULATOR_TASK_NAME, exec -> {
             exec.setExecutable(emulatorConfiguration.getAdb());
             exec.setArgs(l("wait-for-device", "shell", "while $(exit $(getprop sys.boot_completed)) ; do sleep 1; done;"));
-//            exec.setArgs(l("wait-for-device", "shell", "sleep 1000000; while [ -z $(getprop sys.boot_completed) ]; do sleep 1; done;"));
 
             exec.dependsOn(ENSURE_ANDROID_EMULATOR_PERMISSIONS_TASK_NAME, START_ANDROID_EMULATOR_TASK_NAME);
         });
@@ -209,12 +243,9 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
     }
 
     @SafeVarargs
+    @SuppressWarnings("varargs")
     private static <T> List<T> l(T... arr) {
-        final List<T> ret = new ArrayList<>();
-        for (final T v : arr) {
-            ret.add(v);
-        }
-        return ret;
+        return Arrays.asList(arr);
     }
 
     private static InputStream buildStandardInLines(String... lines) {

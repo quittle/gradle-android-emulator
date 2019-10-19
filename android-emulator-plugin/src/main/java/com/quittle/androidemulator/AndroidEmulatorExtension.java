@@ -68,6 +68,7 @@ public class AndroidEmulatorExtension {
     private File avdRoot = null;
     private boolean enableForAndroidTests = true;
     private boolean headless = false;
+    private boolean logEmulatorOutput = false;
 
     public EmulatorExtension getEmulator() {
         return this.emulator;
@@ -111,5 +112,17 @@ public class AndroidEmulatorExtension {
 
     public boolean getHeadless() {
         return this.headless;
+    }
+
+    public void logEmulatorOutput(final boolean logEmulatorOutput) {
+        this.logEmulatorOutput = logEmulatorOutput;
+    }
+
+    public void setLogEmulatorOutput(final boolean logEmulatorOutput) {
+        this.logEmulatorOutput = logEmulatorOutput;
+    }
+
+    public boolean getLogEmulatorOutput() {
+        return this.logEmulatorOutput;
     }
 }

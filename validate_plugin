@@ -67,3 +67,8 @@ fi
 if should_run_target 5; then
     ANDROID_GRADLE_VERSION=3.4.0 ANDROID_GRADLE_VERSION_NEW=true ANDROID_EMULATOR_GOOGLE_APIS=true ANDROID_EMULATOR_SDK_VERSION=24 ./gradlew -p example-android-project connectedCheck
 fi
+
+# Use the logEmulatorOutput flag
+if should_run_target 6; then
+    LOG_ANDROID_EMULATOR=true ANDROID_EMULATOR_SDK_VERSION=24 ANDROID_EMULATOR_GOOGLE_APIS=true ./gradlew -p example-android-project connectedCheck
+fi
