@@ -65,18 +65,22 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
                 });
     }
 
+    private static boolean ensureFileIsExecutable(final File file) {
+        return file.canExecute() || file.setExecutable(true);
+    }
+
     private static void createEnsurePermissionsTask(final Project project, final EmulatorConfiguration emulatorConfiguration) {
         project.getTasks().create(ENSURE_ANDROID_EMULATOR_PERMISSIONS_TASK_NAME, task -> {
             task.doFirst(t -> {
-                if (!emulatorConfiguration.getSdkManager().setExecutable(true)) {
+                if (!ensureFileIsExecutable(emulatorConfiguration.getSdkManager())) {
                     throw new RuntimeException("Unable to make SDK Manager executable");
                 }
 
-                if (!emulatorConfiguration.getAvdManager().setExecutable(true)) {
+                if (!ensureFileIsExecutable(emulatorConfiguration.getAvdManager())) {
                     throw new RuntimeException("Unable to make Android Virtual Device manager executable");
                 }
 
-                if (!emulatorConfiguration.getAdb().setExecutable(true)) {
+                if (!ensureFileIsExecutable(emulatorConfiguration.getAdb())) {
                     throw new RuntimeException(("Unable to make ADB executable"));
                 }
             });
