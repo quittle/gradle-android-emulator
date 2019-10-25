@@ -65,7 +65,15 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
                 });
     }
 
+    /**
+     * Ensures given file is executable, and if not, tries promote file to be executable
+     *
+     * @return true, if file is executable
+     */
     private static boolean ensureFileIsExecutable(final File file) {
+        // First check if file is executable. In most environments sdk binaries are already executable.
+        // In some environments your process is not an owner of the file and can't change permission.
+        // For example docker or CI
         return file.canExecute() || file.setExecutable(true);
     }
 
