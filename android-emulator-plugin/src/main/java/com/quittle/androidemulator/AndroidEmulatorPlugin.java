@@ -146,11 +146,7 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
         command.add(emulatorConfiguration.getEmulator().getAbsolutePath());
         command.add("@" + emulatorConfiguration.getEmulatorName());
         command.add("-shell");
-        if (emulatorConfiguration.getHeadless()) {
-            command.add("-no-skin");
-            command.add("-no-audio");
-            command.add("-no-window");
-        }
+        command.addAll(emulatorConfiguration.getAdditionalEmulatorArguments());
         final ProcessBuilder pb = new ProcessBuilder(command.toArray(new String[0]));
         pb.environment().putAll(emulatorConfiguration.getEnvironmentVariableMap());
         if (!logEmulatorOutput) {
@@ -197,14 +193,14 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
         new Thread(() -> {
             try {
                 IOUtils.lineIterator(stdout, StandardCharsets.UTF_8).forEachRemaining(s -> logger.info("[Android Emulator - STDOUT] " + s));
-            } catch (IOException e) {
+            } catch (IOException | IllegalStateException e) {
                 logger.error("Error reading Android emulator stdout", e);
             }
         }).start();
         new Thread(() -> {
             try {
                 IOUtils.lineIterator(stderr, StandardCharsets.UTF_8).forEachRemaining(s -> logger.info("[Android Emulator - STDERR] " + s));
-            } catch (IOException e) {
+            } catch (IOException | IllegalStateException e) {
                 logger.error("Error reading Android emulator stderr", e);
             }
         }).start();

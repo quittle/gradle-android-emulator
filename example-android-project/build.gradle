@@ -81,6 +81,9 @@ androidEmulator {
     headless true
     headless = true
 
+    additionalEmulatorArguments '-netspeed', 'lte'
+    additionalEmulatorArguments = ['-netspeed', 'lte']
+
     logEmulatorOutput LOG_ANDROID_EMULATOR
     logEmulatorOutput = LOG_ANDROID_EMULATOR
 }

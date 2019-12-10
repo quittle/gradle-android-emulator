@@ -3,6 +3,9 @@ package com.quittle.androidemulator;
 import org.gradle.api.Action;
 
 import java.io.File;
+import java.util.Collection;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Provides configuration for {@link AndroidEmulatorPlugin}.
@@ -68,6 +71,7 @@ public class AndroidEmulatorExtension {
     private File avdRoot = null;
     private boolean enableForAndroidTests = true;
     private boolean headless = false;
+    private String[] additionalEmulatorArguments = null;
     private boolean logEmulatorOutput = false;
 
     public EmulatorExtension getEmulator() {
@@ -114,6 +118,26 @@ public class AndroidEmulatorExtension {
         return this.headless;
     }
 
+    public void additionalEmulatorArguments(final String[] additionalEmulatorArguments) {
+        this.additionalEmulatorArguments = clone(additionalEmulatorArguments);
+    }
+
+    public void additionalEmulatorArguments(final Collection<String> additionalEmulatorArguments) {
+        this.additionalEmulatorArguments = toArray(additionalEmulatorArguments);
+    }
+
+    public void setAdditionalEmulatorArguments(final String[] additionalEmulatorArguments) {
+        this.additionalEmulatorArguments = clone(additionalEmulatorArguments);
+    }
+
+    public void setAdditionalEmulatorArguments(final Collection<String> additionalEmulatorArguments) {
+        this.additionalEmulatorArguments = toArray(additionalEmulatorArguments);
+    }
+
+    public String[] getAdditionalEmulatorArguments() {
+        return clone(this.additionalEmulatorArguments);
+    }
+
     public void logEmulatorOutput(final boolean logEmulatorOutput) {
         this.logEmulatorOutput = logEmulatorOutput;
     }
@@ -124,5 +148,34 @@ public class AndroidEmulatorExtension {
 
     public boolean getLogEmulatorOutput() {
         return this.logEmulatorOutput;
+    }
+
+    /**
+     * Helper method for cloning a potentially null array
+     * @param arr The array to clone
+     * @param <T> The type of array
+     * @return {@code null} if {@code arr} is {@code null}, otherwise a copy of the input array
+     */
+    @SuppressFBWarnings("PZLA_PREFER_ZERO_LENGTH_ARRAYS")
+    private static <T> T[] clone(final T[] arr) {
+        if (arr == null) {
+            return null;
+        }
+        return arr.clone();
+    }
+
+    /**
+     * Helper method for converting a collection to an array
+     * @param collection The array to convert
+     * @return {@code null} if {@code collection} is {@code null}, otherwise an array containing the
+     * contents of {@code collection}.
+     */
+    @SuppressFBWarnings("PZLA_PREFER_ZERO_LENGTH_ARRAYS")
+    private static String[] toArray(final Collection<String> collection) {
+        if (collection == null) {
+            return null;
+        }
+
+        return collection.toArray(new String[collection.size()]);
     }
 }

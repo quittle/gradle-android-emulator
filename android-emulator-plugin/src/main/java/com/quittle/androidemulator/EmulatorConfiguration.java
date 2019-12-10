@@ -6,7 +6,10 @@ import com.google.common.collect.ImmutableMap;
 import org.gradle.api.Project;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.List;
 
 class EmulatorConfiguration {
     private final File sdkRoot;
@@ -17,7 +20,7 @@ class EmulatorConfiguration {
     private final File avdRoot;
     private final Map<String, String> environmentVariableMap;
     private final boolean enableForAndroidTests;
-    private final boolean headless;
+    private final List<String> additionalEmulatorArguments;
     private final boolean logEmulatorOutput;
     private final String androidVersion;
     private final String flavor;
@@ -43,7 +46,18 @@ class EmulatorConfiguration {
                 "ANDROID_HOME", sdkRoot.getAbsolutePath(),
                 "ANDROID_AVD_HOME", avdRoot.getAbsolutePath());
         this.enableForAndroidTests = androidEmulatorExtension.getEnableForAndroidTests();
-        this.headless = androidEmulatorExtension.getHeadless();
+
+        this.additionalEmulatorArguments = new ArrayList<>();
+        if (androidEmulatorExtension.getHeadless()) {
+            additionalEmulatorArguments.add("-no-skin");
+            additionalEmulatorArguments.add("-no-audio");
+            additionalEmulatorArguments.add("-no-window");
+        }
+        final String[] additionalArgs = androidEmulatorExtension.getAdditionalEmulatorArguments();
+        if (additionalArgs != null) {
+            additionalEmulatorArguments.addAll(Arrays.asList(additionalArgs));
+        }
+
         this.logEmulatorOutput = androidEmulatorExtension.getLogEmulatorOutput();
 
         final AndroidEmulatorExtension.EmulatorExtension emulator = androidEmulatorExtension.getEmulator();
@@ -108,8 +122,8 @@ class EmulatorConfiguration {
         return enableForAndroidTests;
     }
 
-    boolean getHeadless() {
-        return headless;
+    List<String> getAdditionalEmulatorArguments() {
+        return additionalEmulatorArguments;
     }
 
     boolean getLogEmulatorOutput() {
