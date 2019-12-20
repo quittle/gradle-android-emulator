@@ -55,8 +55,7 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
             createInstallEmulatorTask(p, emulatorConfiguration);
             createInstallEmulatorSystemImageTask(p, emulatorConfiguration);
             createCreateEmulatorTask(p, emulatorConfiguration);
-            createStartStopEmulatorTasks(p, emulatorConfiguration);
-            createWaitForEmulatorTask(p, emulatorConfiguration);
+            createEmulatorLifecycleTasks(p, emulatorConfiguration);
         });
     }
 
@@ -139,47 +138,13 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
                 });
     }
 
-    private static void createStartStopEmulatorTasks(final Project project, final EmulatorConfiguration emulatorConfiguration) {
-        final boolean logEmulatorOutput = emulatorConfiguration.getLogEmulatorOutput();
+    private static void createEmulatorLifecycleTasks(final Project project, final EmulatorConfiguration emulatorConfiguration) {
+        final AtomicReference<Process> emulatorProcess = new AtomicReference<>();
+        final AtomicReference<Process> waitForDeviceProcess = new AtomicReference<>();
 
-        final List<String> command = new ArrayList<>();
-        command.add(emulatorConfiguration.getEmulator().getAbsolutePath());
-        command.add("@" + emulatorConfiguration.getEmulatorName());
-        command.add("-shell");
-        command.addAll(emulatorConfiguration.getAdditionalEmulatorArguments());
-        final ProcessBuilder pb = new ProcessBuilder(command.toArray(new String[0]));
-        pb.environment().putAll(emulatorConfiguration.getEnvironmentVariableMap());
-        if (!logEmulatorOutput) {
-             pb.inheritIO();
-        }
-
-        final AtomicReference<Process> process = new AtomicReference<>();
-
-        project.getTasks().create(START_ANDROID_EMULATOR_TASK_NAME, task -> {
-            task.doFirst(t -> {
-                project.getLogger().debug("Starting emulator with command {} {}", pb.environment(), pb.command());
-                try {
-                    final Process directProcess = pb.start();
-                    process.set(directProcess);
-                    if (logEmulatorOutput) {
-                        logOutput(directProcess, project.getLogger());
-                    }
-                    Runtime.getRuntime().addShutdownHook(new Thread(() -> process.getAndUpdate(DESTROY_AND_REPLACE_WITH_NULL)));
-                } catch (final IOException e) {
-                    throw new RuntimeException("Emulator failed to start successfully", e);
-                }
-            });
-
-            task.dependsOn(ENSURE_ANDROID_EMULATOR_PERMISSIONS_TASK_NAME, INSTALL_ANDROID_EMULATOR_TASK_NAME, CREATE_ANDROID_EMULATOR_TASK_NAME);
-            task.finalizedBy(STOP_ANDROID_EMULATOR_TASK_NAME);
-        });
-
-        project.getTasks().create(STOP_ANDROID_EMULATOR_TASK_NAME, task -> {
-            task.doFirst(t -> process.getAndUpdate(DESTROY_AND_REPLACE_WITH_NULL));
-
-            task.dependsOn(ENSURE_ANDROID_EMULATOR_PERMISSIONS_TASK_NAME, START_ANDROID_EMULATOR_TASK_NAME);
-            task.mustRunAfter(WAIT_FOR_ANDROID_EMULATOR_TASK_NAME);
-        });
+        createStartEmulatorTask(project, emulatorConfiguration, emulatorProcess, waitForDeviceProcess);
+        createWaitForEmulatorTask(project, emulatorConfiguration, waitForDeviceProcess);
+        createStopEmulatorTask(project, emulatorProcess);
     }
 
     /**
@@ -206,12 +171,87 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
         }).start();
     }
 
-    private static void createWaitForEmulatorTask(final Project project, final EmulatorConfiguration emulatorConfiguration) {
-        createExecTask(project, emulatorConfiguration, WAIT_FOR_ANDROID_EMULATOR_TASK_NAME, exec -> {
-            exec.setExecutable(emulatorConfiguration.getAdb());
-            exec.setArgs(l("wait-for-device", "shell", "while $(exit $(getprop sys.boot_completed)) ; do sleep 1; done;"));
+    private static void createStartEmulatorTask(final Project project, final EmulatorConfiguration emulatorConfiguration, final AtomicReference<Process> emulatorProcess, final AtomicReference<Process> waitForDeviceProcess) {
+        final boolean logEmulatorOutput = emulatorConfiguration.getLogEmulatorOutput();
 
-            exec.dependsOn(ENSURE_ANDROID_EMULATOR_PERMISSIONS_TASK_NAME, START_ANDROID_EMULATOR_TASK_NAME);
+        final List<String> command = new ArrayList<>();
+        command.add(emulatorConfiguration.getEmulator().getAbsolutePath());
+        command.add("@" + emulatorConfiguration.getEmulatorName());
+        command.add("-shell");
+        command.addAll(emulatorConfiguration.getAdditionalEmulatorArguments());
+        final ProcessBuilder pb = new ProcessBuilder(command.toArray(new String[0]));
+        pb.environment().putAll(emulatorConfiguration.getEnvironmentVariableMap());
+        if (!logEmulatorOutput) {
+            pb.inheritIO();
+        }
+
+        project.getTasks().create(START_ANDROID_EMULATOR_TASK_NAME, task -> {
+            task.doFirst(t -> {
+                final Logger logger = project.getLogger();
+                logger.debug("Starting emulator with command {} {}", pb.environment(), pb.command());
+                try {
+                    final Process directProcess = pb.start();
+                    emulatorProcess.set(directProcess);
+                    if (logEmulatorOutput) {
+                        logOutput(directProcess, logger);
+                    }
+                    new Thread(() -> {
+                        final int returnCode;
+                        try {
+                            returnCode = directProcess.waitFor();
+                        } catch (InterruptedException e) {
+                            logger.warn("Interrupted while watching emulator process", e);
+                            // Do nothing
+                            return;
+                        }
+
+                        if (returnCode != 0) {
+                            final Process p = waitForDeviceProcess.get();
+                            if (p != null) {
+                                p.destroy();
+                            }
+                            logger.error("Emulator exited abnormally with return code " + returnCode);
+                        }
+                    }).start();
+                    Runtime.getRuntime().addShutdownHook(new Thread(() -> emulatorProcess.getAndUpdate(DESTROY_AND_REPLACE_WITH_NULL)));
+                } catch (final IOException e) {
+                    throw new RuntimeException("Emulator failed to start successfully", e);
+                }
+            });
+
+            task.dependsOn(ENSURE_ANDROID_EMULATOR_PERMISSIONS_TASK_NAME, INSTALL_ANDROID_EMULATOR_TASK_NAME, CREATE_ANDROID_EMULATOR_TASK_NAME);
+            task.finalizedBy(STOP_ANDROID_EMULATOR_TASK_NAME);
+        });
+    }
+
+    private static void createWaitForEmulatorTask(final Project project, final EmulatorConfiguration emulatorConfiguration, final AtomicReference<Process> waitForDeviceProcess) {
+        project.getTasks().create(WAIT_FOR_ANDROID_EMULATOR_TASK_NAME, task -> {
+            task.doFirst(t -> {
+                final List<String> command = new ArrayList<>();
+                command.add(emulatorConfiguration.getAdb().getAbsolutePath());
+                command.addAll(l("wait-for-device", "shell", "while $(exit $(getprop sys.boot_completed)) ; do sleep 1; done;"));
+                final ProcessBuilder pb = new ProcessBuilder(command.toArray(new String[0]));
+                pb.environment().putAll(emulatorConfiguration.getEnvironmentVariableMap());
+                try {
+                    final Process p = pb.start();
+                    waitForDeviceProcess.set(p);
+                    p.waitFor();
+                } catch (IOException | InterruptedException e) {
+                    throw new RuntimeException("Unable to wait for emulator", e);
+                }
+            });
+
+            task.getInputs().property("environmentMaps", emulatorConfiguration.getEnvironmentVariableMap());
+            task.dependsOn(ENSURE_ANDROID_EMULATOR_PERMISSIONS_TASK_NAME, START_ANDROID_EMULATOR_TASK_NAME);
+        });
+    }
+
+    private static void createStopEmulatorTask(final Project project, final AtomicReference<Process> emulatorProcess) {
+        project.getTasks().create(STOP_ANDROID_EMULATOR_TASK_NAME, task -> {
+            task.doFirst(t -> emulatorProcess.getAndUpdate(DESTROY_AND_REPLACE_WITH_NULL));
+
+            task.dependsOn(ENSURE_ANDROID_EMULATOR_PERMISSIONS_TASK_NAME, START_ANDROID_EMULATOR_TASK_NAME);
+            task.mustRunAfter(WAIT_FOR_ANDROID_EMULATOR_TASK_NAME);
         });
     }
 
