@@ -153,18 +153,18 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
      * @param logger The logger to report output with
      */
     private static void logOutput(final Process process, final Logger logger) {
-        final InputStream stdout = process.getInputStream();
-        final InputStream stderr = process.getErrorStream();
+        final InputStream stdout = process.getInputStream(); // NOPMD - These can't be closed outside of the thread
+        final InputStream stderr = process.getErrorStream(); // NOPMD - These can't be closed outside of the thread
         new Thread(() -> {
-            try {
-                IOUtils.lineIterator(stdout, StandardCharsets.UTF_8).forEachRemaining(s -> logger.info("[Android Emulator - STDOUT] " + s));
+            try (final InputStream stream = stdout) {
+                IOUtils.lineIterator(stream, StandardCharsets.UTF_8).forEachRemaining(s -> logger.info("[Android Emulator - STDOUT] " + s));
             } catch (IOException | IllegalStateException e) {
                 logger.error("Error reading Android emulator stdout", e);
             }
         }).start();
         new Thread(() -> {
-            try {
-                IOUtils.lineIterator(stderr, StandardCharsets.UTF_8).forEachRemaining(s -> logger.info("[Android Emulator - STDERR] " + s));
+            try (final InputStream stream = stderr) {
+                IOUtils.lineIterator(stream, StandardCharsets.UTF_8).forEachRemaining(s -> logger.info("[Android Emulator - STDERR] " + s));
             } catch (IOException | IllegalStateException e) {
                 logger.error("Error reading Android emulator stderr", e);
             }
