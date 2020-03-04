@@ -105,9 +105,13 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
                     exec.getOutputs().dir(new File(emulatorConfiguration.getSdkRoot(), "emulator"));
 
                     exec.dependsOn(ENSURE_ANDROID_EMULATOR_PERMISSIONS_TASK_NAME);
-                    exec.doLast(t -> {
-                        if (!emulatorConfiguration.getEmulator().setExecutable(true)) {
-                            throw new RuntimeException("Unable to make android emulator executable");
+                    // This cannot be a lambda or the task will never be considered up-to-date
+                    exec.doLast(new Action<Task>() {
+                        @Override
+                        public void execute(Task task) {
+                            if (!emulatorConfiguration.getEmulator().setExecutable(true)) {
+                                throw new RuntimeException("Unable to make android emulator executable");
+                            }
                         }
                     });
                 });
