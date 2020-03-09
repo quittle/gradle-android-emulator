@@ -41,6 +41,11 @@ class EmulatorConfiguration {
             this.avdRoot = new File(project.getBuildDir(), "android-avd-root");
         }
 
+        if (this.sdkRoot == null) {
+            throw new RuntimeException("Unable to initialize com.quittle.android-emulator " +
+                    "because Android plugin has not been initialized with an SDK root.");
+        }
+
         this.environmentVariableMap = ImmutableMap.of(
                 "ANDROID_SDK_ROOT", sdkRoot.getAbsolutePath(),
                 "ANDROID_HOME", sdkRoot.getAbsolutePath(),
