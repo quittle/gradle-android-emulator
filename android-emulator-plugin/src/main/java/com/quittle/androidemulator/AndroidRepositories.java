@@ -91,8 +91,8 @@ public class AndroidRepositories {
     }
 
     /**
-     * The location of the repositories configuraiton file used by the Android SDK tools.
-     * @return The configuration file.
+     * The location of the repositories configuration file used by the Android SDK tools. This file may not exist.
+     * @return The configuration file location.
      * @throws AndroidRepositoryException if unable to determine its location.
      */
     public static File getRepositoriesFile() throws AndroidRepositoryException {

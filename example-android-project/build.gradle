@@ -1,4 +1,3 @@
-
 buildscript {
     final Map<String, String> env = System.getenv()
     project.ext.ANDROID_GRADLE_VERSION = env.getOrDefault('ANDROID_GRADLE_VERSION', '3.2.1')

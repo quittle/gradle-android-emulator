@@ -105,12 +105,6 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
 
     private static void createAddAdditionalSdkRepositoriesTask(final Project project) {
         project.getTasks().create(ADD_ADDITIONAL_SDK_REPOSITORIES_TASK_NAME, task -> {
-            try {
-                task.getInputs().file(AndroidRepositories.getRepositoriesFile());
-            } catch (AndroidRepositoryException e) {
-                throw new TaskInstantiationException("Unable to find Android repositories file", e);
-            }
-
             task.doFirst(t -> {
                 try {
                     final AndroidRepositories repositories = AndroidRepositories.load();

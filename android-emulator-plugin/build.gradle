@@ -8,7 +8,6 @@ buildscript {
     }
 }
 
-
 import com.github.spotbugs.snom.SpotBugsTask
 import org.eclipse.jgit.api.Git
 
