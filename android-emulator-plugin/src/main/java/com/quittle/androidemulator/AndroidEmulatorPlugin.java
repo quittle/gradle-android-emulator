@@ -6,12 +6,15 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
+
 import org.apache.commons.io.IOUtils;
 
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
@@ -22,11 +25,13 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.Task;
 import org.gradle.api.tasks.AbstractExecTask;
 import org.gradle.api.tasks.Exec;
+import org.gradle.api.tasks.TaskExecutionException;
 import org.gradle.api.tasks.TaskInstantiationException;
 
 @SuppressWarnings("PMD.DataflowAnomalyAnalysis")
 public class AndroidEmulatorPlugin implements Plugin<Project> {
     public static final String ENSURE_ANDROID_EMULATOR_PERMISSIONS_TASK_NAME = "ensureAndroidEmulatorPermissions";
+    public static final String ADD_ADDITIONAL_SDK_REPOSITORIES_TASK_NAME = "addAdditionalSdkRepositoriesForAndroidEmulator";
     public static final String INSTALL_ANDROID_EMULATOR_TASK_NAME = "installAndroidEmulator";
     public static final String INSTALL_ANDROID_EMULATOR_SYSTEM_IMAGE_TASK_NAME = "installAndroidEmulatorSystemImage";
     public static final String CREATE_ANDROID_EMULATOR_TASK_NAME = "createAndroidEmulator";
@@ -52,6 +57,7 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
             }
 
             createEnsurePermissionsTask(p, emulatorConfiguration);
+            createAddAdditionalSdkRepositoriesTask(p);
             createInstallEmulatorTask(p, emulatorConfiguration);
             createInstallEmulatorSystemImageTask(p, emulatorConfiguration);
             createCreateEmulatorTask(p, emulatorConfiguration);
@@ -97,6 +103,27 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
         });
     }
 
+    private static void createAddAdditionalSdkRepositoriesTask(final Project project) {
+        project.getTasks().create(ADD_ADDITIONAL_SDK_REPOSITORIES_TASK_NAME, task -> {
+            try {
+                task.getInputs().file(AndroidRepositories.getRepositoriesFile());
+            } catch (AndroidRepositoryException e) {
+                throw new TaskInstantiationException("Unable to find Android repositories file", e);
+            }
+
+            task.doFirst(t -> {
+                try {
+                    final AndroidRepositories repositories = AndroidRepositories.load();
+                    repositories.addRepository("Legacy Google APIs System Images", new URL("https://dl.google.com/android/repository/sys-img/google_apis/sys-img.xml"));
+                    repositories.addRepository("Legacy Android System Images", new URL("https://dl.google.com/android/repository/sys-img/android/sys-img.xml"));
+                    repositories.save();
+                } catch (AndroidRepositoryException | MalformedURLException e) {
+                    throw new TaskExecutionException(t, e);
+                }
+            });
+        });
+    }
+
     private static void createInstallEmulatorTask(final Project project, final EmulatorConfiguration emulatorConfiguration) {
         createExecTask(project, emulatorConfiguration, INSTALL_ANDROID_EMULATOR_TASK_NAME, exec -> {
                     exec.setExecutable(emulatorConfiguration.getSdkManager());
@@ -105,10 +132,11 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
                     exec.getOutputs().dir(new File(emulatorConfiguration.getSdkRoot(), "emulator"));
 
                     exec.dependsOn(ENSURE_ANDROID_EMULATOR_PERMISSIONS_TASK_NAME);
+
                     // This cannot be a lambda or the task will never be considered up-to-date
                     exec.doLast(new Action<Task>() {
                         @Override
-                        public void execute(Task task) {
+                        public void execute(final Task task) {
                             if (!emulatorConfiguration.getEmulator().setExecutable(true)) {
                                 throw new RuntimeException("Unable to make android emulator executable");
                             }
@@ -124,7 +152,7 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
                     exec.setStandardInput(buildStandardInLines("y"));
                     exec.getOutputs().dir(emulatorConfiguration.sdkFile("system-images", emulatorConfiguration.getAndroidVersion(), emulatorConfiguration.getFlavor(), emulatorConfiguration.getAbi()));
                     exec.getOutputs().file(emulatorConfiguration.sdkFile("system-images", emulatorConfiguration.getAndroidVersion(), emulatorConfiguration.getFlavor(), emulatorConfiguration.getAbi(), "system.img"));
-                    exec.dependsOn(ENSURE_ANDROID_EMULATOR_PERMISSIONS_TASK_NAME);
+                    exec.dependsOn(ENSURE_ANDROID_EMULATOR_PERMISSIONS_TASK_NAME, ADD_ADDITIONAL_SDK_REPOSITORIES_TASK_NAME);
                 });
     }
 
@@ -259,7 +287,7 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
         });
     }
 
-    private static UnaryOperator<Process> DESTROY_AND_REPLACE_WITH_NULL = process -> {
+    private static final UnaryOperator<Process> DESTROY_AND_REPLACE_WITH_NULL = process -> {
         if (process != null) {
             process.destroyForcibly();
         }
@@ -267,7 +295,6 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
         return null;
     };
 
-    @SuppressWarnings("unchecked")
     private static Task createExecTask(final Project project,
                                        final EmulatorConfiguration emulatorConfiguration,
                                        final String name,

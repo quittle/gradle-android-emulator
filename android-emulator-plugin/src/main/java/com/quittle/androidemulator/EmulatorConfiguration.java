@@ -3,6 +3,7 @@ package com.quittle.androidemulator;
 import com.android.build.gradle.BaseExtension;
 import com.android.builder.model.ApiVersion;
 import com.google.common.collect.ImmutableMap;
+import org.apache.tools.ant.taskdefs.condition.Os;
 import org.gradle.api.Project;
 
 import java.io.File;
@@ -11,12 +12,9 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.List;
 
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 class EmulatorConfiguration {
     private final File sdkRoot;
-    private final File sdkManager;
-    private final File avdManager;
-    private final File emulator;
-    private final File adb;
     private final File avdRoot;
     private final Map<String, String> environmentVariableMap;
     private final boolean enableForAndroidTests;
@@ -30,10 +28,6 @@ class EmulatorConfiguration {
 
     EmulatorConfiguration(final Project project, final BaseExtension androidExtension, final AndroidEmulatorExtension androidEmulatorExtension) {
         this.sdkRoot = androidExtension.getSdkDirectory();
-        this.sdkManager = sdkFile(sdkRoot,"tools", "bin", "sdkmanager");
-        this.avdManager = sdkFile(sdkRoot,"tools", "bin", "avdmanager");
-        this.emulator = sdkFile(sdkRoot,"emulator", "emulator");
-        this.adb = sdkFile(sdkRoot,"platform-tools", "adb");
 
         if (androidEmulatorExtension.getAvdRoot() != null) {
             this.avdRoot = androidEmulatorExtension.getAvdRoot();
@@ -100,19 +94,35 @@ class EmulatorConfiguration {
     }
 
     File getSdkManager() {
-        return sdkManager;
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            return sdkFile(sdkRoot,"tools", "bin", "sdkmanager.bat");
+        } else {
+            return sdkFile(sdkRoot,"tools", "bin", "sdkmanager");
+        }
     }
 
     File getAvdManager() {
-        return avdManager;
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            return sdkFile(sdkRoot,"tools", "bin", "avdmanager.bat");
+        } else {
+            return sdkFile(sdkRoot,"tools", "bin", "avdmanager");
+        }
     }
 
     File getEmulator() {
-        return emulator;
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            return sdkFile(sdkRoot,"emulator", "emulator.exe");
+        } else {
+            return sdkFile(sdkRoot,"emulator", "emulator");
+        }
     }
 
     File getAdb() {
-        return adb;
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            return sdkFile(sdkRoot,"platform-tools", "adb.exe");
+        } else {
+            return sdkFile(sdkRoot,"platform-tools", "adb");
+        }
     }
 
     File getAvdRoot() {
