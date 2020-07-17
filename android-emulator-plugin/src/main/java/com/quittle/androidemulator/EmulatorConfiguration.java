@@ -25,6 +25,7 @@ class EmulatorConfiguration {
     private final String abi;
     private final String systemImagePackageName;
     private final String emulatorName;
+    private final String deviceType;
 
     EmulatorConfiguration(final Project project, final BaseExtension androidExtension, final AndroidEmulatorExtension androidEmulatorExtension) {
         this.sdkRoot = androidExtension.getSdkDirectory();
@@ -77,6 +78,7 @@ class EmulatorConfiguration {
         this.flavor = emulator.getIncludeGoogleApis() ? "google_apis" : "default";
         this.abi = emulator.getAbi();
         this.systemImagePackageName = String.format("system-images;%s;%s;%s", androidVersion, flavor, abi);
+        this.deviceType = emulator.getDevice();
 
         if (emulator.getName() != null) {
             this.emulatorName = emulator.getName();
@@ -163,6 +165,10 @@ class EmulatorConfiguration {
 
     String getEmulatorName() {
         return emulatorName;
+    }
+
+    String getDeviceType() {
+        return deviceType;
     }
 
     private static File sdkFile(final File sdkRoot, final String... path) {

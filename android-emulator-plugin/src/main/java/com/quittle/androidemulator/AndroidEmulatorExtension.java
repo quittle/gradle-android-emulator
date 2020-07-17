@@ -14,6 +14,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 public class AndroidEmulatorExtension {
     public static class EmulatorExtension {
         private String name = null;
+        private String device = null;
         private int sdkVersion = -1;
         private String abi = "x86";
         private boolean includeGoogleApis = false;
@@ -28,6 +29,18 @@ public class AndroidEmulatorExtension {
 
         public void name(final String name) {
             this.name = name;
+        }
+
+        public String getDevice() {
+            return this.device;
+        }
+
+        public void setDevice(final String device) {
+            this.device = device;
+        }
+
+        public void device(final String device) {
+            this.device = device;
         }
 
         public int getSdkVersion() {

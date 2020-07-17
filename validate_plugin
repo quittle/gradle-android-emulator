@@ -80,3 +80,13 @@ if should_run_target 7; then
             echo 'Build should not have succeeded' && exit 1 || \
             echo 'Build failure expected due to invalid emulator arguments'
 fi
+
+# Use the emulator's device field by specifying the device type
+if should_run_target 8; then
+    ANDROID_EMULATOR_SDK_VERSION=24 ANDROID_EMULATOR_DEVICE=pixel_xl ./gradlew -p example-android-project connectedCheck
+fi
+
+# Use the device field by specifying the device code
+if should_run_target 9; then
+    ANDROID_EMULATOR_SDK_VERSION=24 ANDROID_EMULATOR_DEVICE=19 ./gradlew -p example-android-project connectedCheck
+fi
