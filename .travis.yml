@@ -19,6 +19,8 @@ jobs:
     - script: ./validate_plugin 5
     - script: ./validate_plugin 6
     - script: ./validate_plugin 7
+    - script: ./validate_plugin 8
+    - script: ./validate_plugin 9
     - stage: Deploy
       script: skip
       deploy:

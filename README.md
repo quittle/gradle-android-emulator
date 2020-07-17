@@ -31,6 +31,7 @@ android {
 androidEmulator {
     emulator {
         name 'my_avd_emulator_name' // Defaults to be dynamically based on the configuration of the AVD
+        device 'pixel_xl' // Defaults to exclude the device flag, using avdmanager default. For options, run avdmanager list device
         sdkVersion 28 // Defaults to (Target SDK), then (Min SDK), then finally 10
         abi 'x86_64' // Defaults to x86
         includeGoogleApis true // Defaults to false

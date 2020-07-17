@@ -8,6 +8,7 @@ buildscript {
     project.ext.ENABLE_FOR_ANDROID_TESTS = Boolean.valueOf(env.getOrDefault('ENABLE_FOR_ANDROID_TESTS', 'true'))
     project.ext.LOG_ANDROID_EMULATOR = Boolean.valueOf(env.getOrDefault('LOG_ANDROID_EMULATOR', 'false'))
     project.ext.FAIL_EMULATOR_STARTUP = Boolean.valueOf(env.getOrDefault('FAIL_EMULATOR_STARTUP', 'false'))
+    project.ext.ANDROID_EMULATOR_DEVICE = env.getOrDefault('ANDROID_EMULATOR_DEVICE', null)
 
     repositories {
         mavenLocal()
@@ -74,6 +75,9 @@ androidEmulator {
 
         includeGoogleApis ANDROID_EMULATOR_GOOGLE_APIS
         includeGoogleApis = ANDROID_EMULATOR_GOOGLE_APIS
+
+        device ANDROID_EMULATOR_DEVICE
+        device = ANDROID_EMULATOR_DEVICE
     }
 
     enableForAndroidTests ENABLE_FOR_ANDROID_TESTS

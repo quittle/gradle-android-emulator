@@ -153,9 +153,15 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
     private static void createCreateEmulatorTask(final Project project, final EmulatorConfiguration emulatorConfiguration) {
         final File avdRoot = emulatorConfiguration.getAvdRoot();
         final String emulatorName = emulatorConfiguration.getEmulatorName();
+        final String emulatorDevice = emulatorConfiguration.getDeviceType();
         createExecTask(project, emulatorConfiguration, CREATE_ANDROID_EMULATOR_TASK_NAME, exec -> {
                     exec.setExecutable(emulatorConfiguration.getAvdManager());
-                    exec.setArgs(l("create", "avd", "--name", emulatorName, "--package", emulatorConfiguration.getSystemImagePackageName(), "--force"));
+                    List<String> args = l("create", "avd", "--name", emulatorName, "--package", emulatorConfiguration.getSystemImagePackageName(), "--force");
+                    if (emulatorDevice != null) {
+                        args.add("--device");
+                        args.add(emulatorDevice);
+                    }
+                    exec.setArgs(args);
                     exec.setStandardInput(buildStandardInLines("no"));
                     exec.getOutputs().dir(new File(avdRoot, emulatorName + ".avd"));
                     exec.getOutputs().file(new File(avdRoot, emulatorName + ".ini"));
@@ -305,8 +311,8 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
 
     @SafeVarargs
     @SuppressWarnings("varargs")
-    private static <T> List<T> l(T... arr) {
-        return Arrays.asList(arr);
+    private static <T> ArrayList<T> l(T... arr) {
+        return new ArrayList<>(Arrays.asList(arr));
     }
 
     private static InputStream buildStandardInLines(String... lines) {
