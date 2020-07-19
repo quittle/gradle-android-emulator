@@ -1,3 +1,5 @@
+os: linux
+dist: xenial
 env:
     global:
         # GRADLE_PUBLISH_KEY
@@ -5,27 +7,27 @@ env:
         # GRADLE_PUBLISH_SECRET
         - secure: v/q2iOeaNbzzCSLr7K8Wvt61pdevWUOGjRP0UHBXAJTe2Ji5VQTs05srzgZO3mtkWvDP0ieKL+Vz0rDy3Ww+PgodJV7SXcQ0ZDq4f+9syZ9VXoeW/5a/K5yvWWF6YxqHVm5wujOscq9RQbTF8zQlBKXaVmZjOV4zcBoN3etCb0sOZDK3ixuiI8XSVovI7CYorGXThd+qCJmjagJ8EO/Lr9CQaaDZILZTitm4RWUnVRkpSy2EGUtlVOYxmKhS3kSQxJtBS6o//waeUyXJLBRDAIeF2+MR4QRoVyLa2oZCvILNTD7VZb29jpoH/Ak6qipgagXq2U/vfaxc0naE95oOuD+vjDQfO75Nfq+etgaGQmriMYSmI/XTMoIwcQTAuFKpWf0FFrIMLWqoamRXR0whTlYfW8XWMk0UGoh0LOONi4zBSmZg8ZXwtPoWAZvUM+bY2VuP2zJCpOyzmHRyClGUSnzni+30Hj8DtFwXJ3yk3EJU9MQ/IF2x5LlbmkBs/TVvEhp4vPYTwRxfIjiBblsfPrU2wh84ZCdCZ4HQhAfT8OpN5jEKK6facaT4pln31kX5jFCTUn8Dq1p8iMDToKsV3I7NgVl5fjEFUTz+uRihcZwBjvx4AWoNrsMJyDrDYyDVBC4ygh+QqNtnUNh75fuek8EAelK4HPH83G/ZkMOvtaU=
         - GRADLE_OPTS="-Dorg.gradle.console=plain -Dgradle.publish.key='$GRADLE_PUBLISH_KEY' -Dgradle.publish.secret='$GRADLE_PUBLISH_SECRET'"
+    jobs:
+        # - TEST_SUITE=1 # This is currently broken on Travis CI but not locally
+        - TEST_SUITE=2
+        - TEST_SUITE=3
+        - TEST_SUITE=4
+        - TEST_SUITE=5
+        - TEST_SUITE=6
+        - TEST_SUITE=7
+        - TEST_SUITE=8
+        - TEST_SUITE=9
 language: android
+jdk:
+    - openjdk8
+    - openjdk10
 install: true
+script:
+    - ./gradlew -p android-emulator-plugin # Build and validate fully
+    - ./validate_plugin "$TEST_SUITE"
 jobs:
-  include:
-    - stage: Build and Test
-      script: ./gradlew -p android-emulator-plugin # Build and validate fully
-      # Run all validations separately to speed up the build and avoid timeouts due to long builds.
-    # - script: ./validate_plugin 1 # This is currently broken on Travis CI but not locally
-    - script: ./validate_plugin 2
-    - script: ./validate_plugin 3
-    - script: ./validate_plugin 4
-    - script: ./validate_plugin 5
-    - script: ./validate_plugin 6
-    - script: ./validate_plugin 7
-    - script: ./validate_plugin 8
-    - script: ./validate_plugin 9
-    - stage: Deploy
-      script: skip
-      deploy:
-        provider: script
-        script: ./gradlew -p android-emulator-plugin publishPlugins
-        on:
-          branch: master
-          tags: true
+    include:
+        - stage: deploy
+          script: ./gradlew -p android-emulator-plugin publishPlugins
+          jdk: openjdk8
+          if: branch = master AND tag IS present

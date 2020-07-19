@@ -1,6 +1,7 @@
 package com.quittle.androidemulator;
 
 import com.android.prefs.AndroidLocation;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.*;
 import java.net.URL;
@@ -11,6 +12,9 @@ import java.util.Properties;
  * Manages Android repository configuration files. Does not manipulate files until {@link #save}
  * is called.
  */
+@SuppressFBWarnings(
+        value = "OBL_UNSATISFIED_OBLIGATION",
+        justification = "https://github.com/spotbugs/spotbugs/issues/43")
 public class AndroidRepositories {
     private static final String PROPERTIES_COUNT_KEY = "count";
     private static final String PROPERTIES_ENABLED_KEY = "enabled";

@@ -15,9 +15,9 @@ The minimum requirement for consumption is to simply
 
 #### build.gradle
 ```groovy
-// Consume from Gradle plugin respository. This is the only required step.
+// Consume from Gradle plugin repository. This is the only required step.
 plugins {
-    id 'com.quittle.android-emulator' version '0.0.1'
+    id 'com.quittle.android-emulator' version 'X.X.X'
 }
 
 // Consume android plugin as usual.
@@ -66,4 +66,5 @@ See `.travis.yml` for the CI/CD setup.
 In the configuration for the build on Travis, `GRADLE_PUBLISH_KEY` and `GRADLE_PUBLISH_SECRET` are
 injected as secret environment variables.
 
-Upon check-in to the `master` branch, Travis checks out, builds, and deploys the plugin.
+Upon check-in to the `master` branch, Travis checks out and builds the plugin. When a commit is tagged, a new version of
+the plugin will be released using the tag version number.

@@ -103,11 +103,19 @@ class EmulatorConfiguration {
         }
     }
 
+    File getCmdLineToolsSdkManager() {
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            return sdkFile(sdkRoot,"cmdline-tools", "latest", "bin", "sdkmanager.bat");
+        } else {
+            return sdkFile(sdkRoot,"cmdline-tools", "latest", "bin", "sdkmanager");
+        }
+    }
+
     File getAvdManager() {
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            return sdkFile(sdkRoot,"tools", "bin", "avdmanager.bat");
+            return sdkFile(sdkRoot,"cmdline-tools", "latest", "bin", "avdmanager.bat");
         } else {
-            return sdkFile(sdkRoot,"tools", "bin", "avdmanager");
+            return sdkFile(sdkRoot,"cmdline-tools", "latest", "bin", "avdmanager");
         }
     }
 
