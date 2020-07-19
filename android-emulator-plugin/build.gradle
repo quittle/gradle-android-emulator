@@ -84,6 +84,10 @@ tasks.withType(SpotBugsTask) {
 javadoc {
     failOnError true
     options.addStringOption 'Xwerror', '-quiet' // See https://stackoverflow.com/a/49544352
+
+    if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
+        options.addBooleanOption 'html5', true
+    }
 }
 
 spotbugs {

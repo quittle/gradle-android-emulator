@@ -23,7 +23,7 @@ buildscript {
 }
 
 plugins {
-    id 'com.quittle.setup-android-sdk' version '1.5.0'
+    id 'com.quittle.setup-android-sdk' version '2.0.0'
 }
 
 apply plugin: 'com.android.application'
@@ -37,8 +37,8 @@ allprojects {
 }
 
 android {
-    compileSdkVersion 28
-    buildToolsVersion '28.0.3'
+    compileSdkVersion 29
+    buildToolsVersion '29.0.3'
 
     defaultConfig {
         minSdkVersion 14
@@ -86,8 +86,8 @@ androidEmulator {
     headless true
     headless = true
 
-    additionalEmulatorArguments '-netspeed', 'lte'
-    additionalEmulatorArguments = ['-netspeed', 'lte']
+    additionalEmulatorArguments '-show-kernel', '-verbose'
+    additionalEmulatorArguments = ['-show-kernel', '-verbose']
 
     if (FAIL_EMULATOR_STARTUP) {
         additionalEmulatorArguments = ['fake', 'arguments']
