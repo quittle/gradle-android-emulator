@@ -30,4 +30,4 @@ jobs:
         - stage: deploy
           script: ./gradlew -p android-emulator-plugin publishPlugins
           jdk: openjdk8
-          if: branch = master AND tag IS present
+          if: tag IS present
