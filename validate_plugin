@@ -63,7 +63,7 @@ if should_run_target 4; then
     ANDROID_GRADLE_VERSION=2.3.3 ANDROID_GRADLE_VERSION_NEW=false ANDROID_EMULATOR_GOOGLE_APIS=true ANDROID_EMULATOR_SDK_VERSION=24 ./gradlew -p example-android-project connectedCheck
 fi
 
-# Use the latest Gradle plugin
+# Use a newer version of Gradle plugin
 if should_run_target 5; then
     ANDROID_GRADLE_VERSION=3.4.0 ANDROID_GRADLE_VERSION_NEW=true ANDROID_EMULATOR_GOOGLE_APIS=true ANDROID_EMULATOR_SDK_VERSION=24 ./gradlew -p example-android-project connectedCheck
 fi
@@ -89,4 +89,9 @@ fi
 # Use the device field by specifying the device code
 if should_run_target 9; then
     ANDROID_EMULATOR_SDK_VERSION=24 ANDROID_EMULATOR_DEVICE=19 ./gradlew -p example-android-project connectedCheck
+fi
+
+# Use the latest Gradle plugin
+if should_run_target 10; then
+    ANDROID_GRADLE_VERSION=4.0.1 ANDROID_GRADLE_VERSION_NEW=true ANDROID_EMULATOR_GOOGLE_APIS=true ANDROID_EMULATOR_SDK_VERSION=24 ./gradlew -p example-android-project connectedCheck
 fi

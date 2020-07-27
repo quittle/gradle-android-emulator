@@ -17,6 +17,7 @@ env:
         - TEST_SUITE=7
         - TEST_SUITE=8
         - TEST_SUITE=9
+        - TEST_SUITE=10
 language: android
 jdk:
     - openjdk8
