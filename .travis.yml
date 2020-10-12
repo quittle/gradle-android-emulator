@@ -20,8 +20,8 @@ env:
         - TEST_SUITE=10
 language: android
 jdk:
-    - openjdk8
-    - openjdk10
+    #- openjdk8
+    #- openjdk10
     - openjdk11
 install: true
 script:
