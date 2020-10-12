@@ -22,6 +22,7 @@ language: android
 jdk:
     - openjdk8
     - openjdk10
+    - openjdk11
 install: true
 script:
     - ./gradlew -p android-emulator-plugin # Build and validate fully
