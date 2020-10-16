@@ -68,6 +68,15 @@ dependencies {
     implementation 'org.apache.logging.log4j:log4j-iostreams:2.13.3'
 
     compileOnly 'com.google.code.findbugs:annotations:3.0.1'
+    testCompileOnly 'com.google.code.findbugs:annotations:3.0.1'
+
+    testImplementation 'io.mockk:mockk:1.10.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.7.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:3.5.13'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 tasks.withType(JavaCompile) {
