@@ -44,6 +44,7 @@ class EmulatorConfiguration {
     private final String systemImagePackageName;
     private final String emulatorName;
     private final String deviceType;
+    private Integer emulatorPort;
 
     EmulatorConfiguration(final Project project, final BaseExtension androidExtension, final AndroidEmulatorExtension androidEmulatorExtension) {
         this.sdkRoot = androidExtension.getSdkDirectory();
@@ -105,6 +106,33 @@ class EmulatorConfiguration {
         }
     }
 
+    private static File sdkFile(final File sdkRoot, final String... pathParts) {
+        File path = sdkRoot;
+        for (final String part : pathParts) {
+            if (part != null) {
+                path = new File(path, part);
+            } else if (!path.isDirectory()) {
+                return null;
+            } else {
+                File[] children = path.listFiles();
+
+                if (children == null || children.length == 0) {
+                    return null;
+                }
+
+                Arrays.sort(children, (a, b) -> {
+                    final VersionNumber aVersion = VersionNumber.parse(a.getName());
+                    final VersionNumber bVersion = VersionNumber.parse(b.getName());
+                    return aVersion.compareTo(bVersion);
+                });
+
+                path = children[children.length - 1];
+            }
+        }
+
+        return path;
+    }
+
     File getSdkRoot() {
         return sdkRoot;
     }
@@ -116,6 +144,7 @@ class EmulatorConfiguration {
     /**
      * Provides the initial {@code sdkmanager} used to install the latest version, retrieved later by this plugin via
      * {@link #getCmdLineToolsSdkManager}.
+     *
      * @return The {@code sdkmanager} file location, which is guaranteed to exist and be a file if returned.
      * @throws RuntimeException if no {@code sdkmanager} to use can be found on disk.
      */
@@ -139,33 +168,33 @@ class EmulatorConfiguration {
 
     File getCmdLineToolsSdkManager() {
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            return sdkFile(sdkRoot,"cmdline-tools", "latest", "bin", "sdkmanager.bat");
+            return sdkFile(sdkRoot, "cmdline-tools", "latest", "bin", "sdkmanager.bat");
         } else {
-            return sdkFile(sdkRoot,"cmdline-tools", "latest", "bin", "sdkmanager");
+            return sdkFile(sdkRoot, "cmdline-tools", "latest", "bin", "sdkmanager");
         }
     }
 
     File getAvdManager() {
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            return sdkFile(sdkRoot,"cmdline-tools", "latest", "bin", "avdmanager.bat");
+            return sdkFile(sdkRoot, "cmdline-tools", "latest", "bin", "avdmanager.bat");
         } else {
-            return sdkFile(sdkRoot,"cmdline-tools", "latest", "bin", "avdmanager");
+            return sdkFile(sdkRoot, "cmdline-tools", "latest", "bin", "avdmanager");
         }
     }
 
     File getEmulator() {
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            return sdkFile(sdkRoot,"emulator", "emulator.exe");
+            return sdkFile(sdkRoot, "emulator", "emulator.exe");
         } else {
-            return sdkFile(sdkRoot,"emulator", "emulator");
+            return sdkFile(sdkRoot, "emulator", "emulator");
         }
     }
 
     File getAdb() {
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            return sdkFile(sdkRoot,"platform-tools", "adb.exe");
+            return sdkFile(sdkRoot, "platform-tools", "adb.exe");
         } else {
-            return sdkFile(sdkRoot,"platform-tools", "adb");
+            return sdkFile(sdkRoot, "platform-tools", "adb");
         }
     }
 
@@ -213,30 +242,21 @@ class EmulatorConfiguration {
         return deviceType;
     }
 
-    private static File sdkFile(final File sdkRoot, final String... pathParts) {
-        File path = sdkRoot;
-        for (final String part : pathParts) {
-            if (part != null) {
-                path = new File(path, part);
-            } else if (!path.isDirectory()) {
-                return null;
-            } else {
-                File[] children = path.listFiles();
+    /**
+     * When the plugin starts the emulator, it should bind it to a specify a port in the range 5554 to 5682 and call
+     * this method to set it for other tasks to use.
+     * See https://developer.android.com/studio/run/emulator-commandline#common for more details.
+     */
+    void setEmulatorPort(final int port) {
+        this.emulatorPort = port;
+    }
 
-                if (children == null || children.length == 0) {
-                    return null;
-                }
-
-                Arrays.sort(children, (a, b) -> {
-                    final VersionNumber aVersion = VersionNumber.parse(a.getName());
-                    final VersionNumber bVersion = VersionNumber.parse(b.getName());
-                    return aVersion.compareTo(bVersion);
-                });
-
-                path = children[children.length - 1];
-            }
-        }
-
-        return path;
+    /**
+     * The port the emulator was bound to in the range 5554 to 5682. Note that if bound the port will always be even.
+     * See https://developer.android.com/studio/run/emulator-commandline#common for more details.
+     * @return The port the emulator should be bound to or null if not bound yet.
+     */
+    Integer getEmulatorPort() {
+        return this.emulatorPort;
     }
 }
