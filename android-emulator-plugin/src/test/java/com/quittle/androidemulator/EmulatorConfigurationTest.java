@@ -20,7 +20,7 @@ import static io.mockk.MockKKt.every;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
-@SuppressWarnings({"PMD.BeanMembersShouldSerialize", "PMD.AvoidDuplicateLiterals"})
+@SuppressWarnings({"PMD.AvoidDuplicateLiterals"})
 @ExtendWith({MockitoExtension.class, MockKExtension.class})
 class EmulatorConfigurationTest {
     @Mock

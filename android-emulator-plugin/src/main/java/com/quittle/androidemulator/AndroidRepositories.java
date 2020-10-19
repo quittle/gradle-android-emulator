@@ -22,7 +22,6 @@ public class AndroidRepositories {
     private static final String PROPERTIES_DISP_KEY = "disp";
 
     private final File repositoriesFile;
-    @SuppressWarnings("PMD.BeanMembersShouldSerialize")
     private final Properties properties;
 
     /**

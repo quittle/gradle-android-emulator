@@ -4,14 +4,15 @@ import com.android.build.gradle.BaseExtension;
 import com.android.builder.model.ApiVersion;
 import com.google.common.collect.ImmutableMap;
 import org.apache.tools.ant.taskdefs.condition.Os;
+import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.util.VersionNumber;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.*;
 
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
 class EmulatorConfiguration {
@@ -44,6 +45,8 @@ class EmulatorConfiguration {
     private final String systemImagePackageName;
     private final String emulatorName;
     private final String deviceType;
+    private final String emulatorUuid;
+    private final boolean forceColdStart;
 
     EmulatorConfiguration(final Project project, final BaseExtension androidExtension, final AndroidEmulatorExtension androidEmulatorExtension) {
         this.sdkRoot = androidExtension.getSdkDirectory();
@@ -103,6 +106,82 @@ class EmulatorConfiguration {
         } else {
             this.emulatorName = String.format("generated-%s_%s-%s", androidVersion, abi, flavor);
         }
+
+        // The previous UUID may not be present either if the emulator doesn't exist, has never been launched, was
+        // launched by a previous version of the plugin, or was launched manually or by the other tooling. In any case,
+        // the emulator should be restarted, even if state was stored to launch faster to ensure the device has a UUID.
+        // This UUID is used to uniquely identify the emulator being launched by the plugin.
+        final String previousUuid = attemptToParseEmulatorLaunchParamsForUuid(avdRoot, emulatorName);
+        if (previousUuid != null) {
+            this.emulatorUuid = previousUuid;
+            this.forceColdStart = false;
+        } else {
+            // A random UUID is used to support a wider variety of scenarios
+            // If a hard-coded UUID was chosen then multiple emulators managed by this plugin would conflict. If a UUID
+            // was derived from the emulator name, multiple workspaces running this plugin could result in conflicts
+            // if they used the same name.
+            this.emulatorUuid = UUID.randomUUID().toString();
+            // Ensure the device is cold-booted in order for the emulator to store the uuid in the launch params file to
+            // be read on the next run.
+            this.forceColdStart = true;
+        }
+    }
+
+    /**
+     * The emulator startup parameters are written to a file in the emulator's files in the AVD root. The emulator may
+     * have been previously launched without a UUID either by a previous version of the plugin or by launch by something
+     * other than this plugin.
+     *
+     * @param avdRoot      The AVD root as determined by this plugin
+     * @param emulatorName The name of the emulator that will be started. This emulator may not exist when this is run
+     * @return The UUID associated with the emulator or {@code null} if the emulator doesn't exist or isn't associated
+     * with a UUID.
+     */
+    @SuppressWarnings("PMD.DataflowAnomalyAnalysis")
+    private static String attemptToParseEmulatorLaunchParamsForUuid(final File avdRoot, final String emulatorName) {
+        final File launchParamsFile = new File(avdRoot, emulatorName + ".avd/emu-launch-params.txt");
+        if (launchParamsFile.isFile()) {
+            final List<String> contents;
+            try {
+                contents = Files.readAllLines(launchParamsFile.toPath(), StandardCharsets.UTF_8);
+            } catch (final IOException e) {
+                throw new GradleException("Unable to read " + launchParamsFile.getAbsolutePath(), e);
+            }
+            final String uuidParamPrefix = "emu.uuid=";
+            for (final String line : contents) {
+                if (line.startsWith(uuidParamPrefix)) {
+                    return line.substring(uuidParamPrefix.length());
+                }
+            }
+        }
+        return null;
+    }
+
+    private static File sdkFile(final File sdkRoot, final String... pathParts) {
+        File path = sdkRoot;
+        for (final String part : pathParts) {
+            if (part != null) {
+                path = new File(path, part);
+            } else if (!path.isDirectory()) {
+                return null;
+            } else {
+                File[] children = path.listFiles();
+
+                if (children == null || children.length == 0) {
+                    return null;
+                }
+
+                Arrays.sort(children, (a, b) -> {
+                    final VersionNumber aVersion = VersionNumber.parse(a.getName());
+                    final VersionNumber bVersion = VersionNumber.parse(b.getName());
+                    return aVersion.compareTo(bVersion);
+                });
+
+                path = children[children.length - 1];
+            }
+        }
+
+        return path;
     }
 
     File getSdkRoot() {
@@ -116,6 +195,7 @@ class EmulatorConfiguration {
     /**
      * Provides the initial {@code sdkmanager} used to install the latest version, retrieved later by this plugin via
      * {@link #getCmdLineToolsSdkManager}.
+     *
      * @return The {@code sdkmanager} file location, which is guaranteed to exist and be a file if returned.
      * @throws RuntimeException if no {@code sdkmanager} to use can be found on disk.
      */
@@ -139,33 +219,33 @@ class EmulatorConfiguration {
 
     File getCmdLineToolsSdkManager() {
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            return sdkFile(sdkRoot,"cmdline-tools", "latest", "bin", "sdkmanager.bat");
+            return sdkFile(sdkRoot, "cmdline-tools", "latest", "bin", "sdkmanager.bat");
         } else {
-            return sdkFile(sdkRoot,"cmdline-tools", "latest", "bin", "sdkmanager");
+            return sdkFile(sdkRoot, "cmdline-tools", "latest", "bin", "sdkmanager");
         }
     }
 
     File getAvdManager() {
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            return sdkFile(sdkRoot,"cmdline-tools", "latest", "bin", "avdmanager.bat");
+            return sdkFile(sdkRoot, "cmdline-tools", "latest", "bin", "avdmanager.bat");
         } else {
-            return sdkFile(sdkRoot,"cmdline-tools", "latest", "bin", "avdmanager");
+            return sdkFile(sdkRoot, "cmdline-tools", "latest", "bin", "avdmanager");
         }
     }
 
     File getEmulator() {
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            return sdkFile(sdkRoot,"emulator", "emulator.exe");
+            return sdkFile(sdkRoot, "emulator", "emulator.exe");
         } else {
-            return sdkFile(sdkRoot,"emulator", "emulator");
+            return sdkFile(sdkRoot, "emulator", "emulator");
         }
     }
 
     File getAdb() {
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            return sdkFile(sdkRoot,"platform-tools", "adb.exe");
+            return sdkFile(sdkRoot, "platform-tools", "adb.exe");
         } else {
-            return sdkFile(sdkRoot,"platform-tools", "adb");
+            return sdkFile(sdkRoot, "platform-tools", "adb");
         }
     }
 
@@ -213,30 +293,16 @@ class EmulatorConfiguration {
         return deviceType;
     }
 
-    private static File sdkFile(final File sdkRoot, final String... pathParts) {
-        File path = sdkRoot;
-        for (final String part : pathParts) {
-            if (part != null) {
-                path = new File(path, part);
-            } else if (!path.isDirectory()) {
-                return null;
-            } else {
-                File[] children = path.listFiles();
+    /**
+     * The UUID version associated with the properties of the emulator to be managed by this plguin.
+     *
+     * @return A non-null, version 4 UUID.
+     */
+    String getEmulatorUuid() {
+        return emulatorUuid;
+    }
 
-                if (children == null || children.length == 0) {
-                    return null;
-                }
-
-                Arrays.sort(children, (a, b) -> {
-                    final VersionNumber aVersion = VersionNumber.parse(a.getName());
-                    final VersionNumber bVersion = VersionNumber.parse(b.getName());
-                    return aVersion.compareTo(bVersion);
-                });
-
-                path = children[children.length - 1];
-            }
-        }
-
-        return path;
+    boolean shouldForceColdStart() {
+        return forceColdStart;
     }
 }

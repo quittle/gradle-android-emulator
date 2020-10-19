@@ -104,4 +104,10 @@ spotbugs {
     reportLevel 'low'
 }
 
+pmd {
+    ruleSetFiles = files("configuration/pmd.xml")
+    consoleOutput true
+    ruleSets = []
+}
+
 defaultTasks 'assemble', 'javadoc', 'check'
