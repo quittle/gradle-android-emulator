@@ -20,10 +20,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @SuppressWarnings("PMD.DataflowAnomalyAnalysis")
 public class AndroidEmulatorPlugin implements Plugin<Project> {
@@ -37,13 +41,15 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
     public static final String WAIT_FOR_ANDROID_EMULATOR_TASK_NAME = "waitForAndroidEmulator";
     public static final String STOP_ANDROID_EMULATOR_TASK_NAME = "stopAndroidEmulator";
     /**
-     * This is matching adb output lines. E.g.
+     * This is matching adb output lines. These emulator serial formats may change in the future and may lead to
+     * breakages. Example ADB Output
      * <pre>{@code
+     * List of devices attached
      * emulator-5554       device
      * 192.168.1.2:42839   device
      * }</pre>
      */
-    private static final Pattern ADB_OUTPUT_PATTERN = Pattern.compile("([\\w\\d\\-:\\.]+)\\s+([\\d\\w\\-]+)");
+    private static final Pattern ADB_OUTPUT_EMULATOR_PATTERN = Pattern.compile("(emulator-(\\d{1,5}))\\s+device");
     private static final UnaryOperator<Process> DESTROY_AND_REPLACE_WITH_NULL = process -> {
         if (process != null) {
             process.destroy();
@@ -175,7 +181,7 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
         final AtomicReference<Process> emulatorProcess = new AtomicReference<>();
         final AtomicReference<Process> waitForDeviceProcess = new AtomicReference<>();
 
-        createStartEmulatorTask(project, emulatorConfiguration, emulatorProcess, waitForDeviceProcess);
+        createStartEmulatorTask(project, emulatorConfiguration, adbProxy, emulatorProcess, waitForDeviceProcess);
         createWaitForEmulatorTask(project, emulatorConfiguration, adbProxy, waitForDeviceProcess);
         createStopEmulatorTask(project, emulatorProcess);
     }
@@ -205,38 +211,42 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
         }).start();
     }
 
-    private static void createStartEmulatorTask(final Project project, final EmulatorConfiguration emulatorConfiguration, final AtomicReference<Process> emulatorProcess, final AtomicReference<Process> waitForDeviceProcess) {
-        final boolean logEmulatorOutput = emulatorConfiguration.getLogEmulatorOutput();
-
-        final List<String> command = new ArrayList<>();
-        command.add(emulatorConfiguration.getEmulator().getAbsolutePath());
-        command.add("@" + emulatorConfiguration.getEmulatorName());
-
-        // Allows the plugin to monitor the logs from the emulator and start the emulator synchronously. Without this,
-        // the emulator would be detached from the process being build and be much more difficult to shut down.
-        command.add("-shell");
-
-        // Forces the emulator to ignore the stored snapshot and cold start up. This is currently used to ensure the
-        // emulator has a predictable UUID associated with it.
-        if (emulatorConfiguration.shouldForceColdStart()) {
-            command.add("-no-snapshot-load");
-        }
-
-        // This sets a property retrievable via ADB that allows the plugin to identify the emulator launched. Without
-        // it, the emulator serial could be guessed but not with 100% certainty. Emulator serials are currently of the
-        // form "emulator-{port}" which may vary, depending on how many other emulators were launched.
-        // Based on guidance from https://stackoverflow.com/a/42038655/1554990
-        command.addAll(l("-prop", "emu.uuid=" + emulatorConfiguration.getEmulatorUuid()));
-
-        command.addAll(emulatorConfiguration.getAdditionalEmulatorArguments());
-        final ProcessBuilder pb = new ProcessBuilder(command.toArray(new String[0]));
-        pb.environment().putAll(emulatorConfiguration.getEnvironmentVariableMap());
-        if (!logEmulatorOutput) {
-            pb.inheritIO();
-        }
-
+    private static void createStartEmulatorTask(
+            final Project project,
+            final EmulatorConfiguration emulatorConfiguration,
+            final AdbProxy adbProxy,
+            final AtomicReference<Process> emulatorProcess,
+            final AtomicReference<Process> waitForDeviceProcess) {
         project.getTasks().create(START_ANDROID_EMULATOR_TASK_NAME, task -> {
             task.doFirst(t -> {
+                final boolean logEmulatorOutput = emulatorConfiguration.getLogEmulatorOutput();
+
+                final int proposedEmulatorPort = findAcceptableEmulatorPort(adbProxy);
+                emulatorConfiguration.setEmulatorPort(proposedEmulatorPort);
+
+                final List<String> command = new ArrayList<>();
+                command.add(emulatorConfiguration.getEmulator().getAbsolutePath());
+                command.add("@" + emulatorConfiguration.getEmulatorName());
+
+                // Allows the plugin to monitor the logs from the emulator and start the emulator synchronously. Without this,
+                // the emulator would be detached from the process being build and be much more difficult to shut down.
+                command.add("-shell");
+
+                command.addAll(l("-port", String.valueOf(proposedEmulatorPort)));
+
+                // Forces the emulator to ignore the stored snapshot and cold start up. This is currently used to ensure the
+                // emulator has a predictable UUID associated with it.
+                if (emulatorConfiguration.shouldForceColdStart()) {
+                    command.add("-no-snapshot-load");
+                }
+
+                command.addAll(emulatorConfiguration.getAdditionalEmulatorArguments());
+                final ProcessBuilder pb = new ProcessBuilder(command.toArray(new String[0]));
+                pb.environment().putAll(emulatorConfiguration.getEnvironmentVariableMap());
+                if (!logEmulatorOutput) {
+                    pb.inheritIO();
+                }
+
                 final Logger logger = project.getLogger();
                 logger.debug("Starting emulator with command {} {}", pb.environment(), pb.command());
                 try {
@@ -274,6 +284,24 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
         });
     }
 
+    private static int findAcceptableEmulatorPort(final AdbProxy adbProxy) {
+        final Set<Integer> reservedPorts =
+                Stream.of(adbProxy.execute("devices"))
+                        .map(ADB_OUTPUT_EMULATOR_PATTERN::matcher)
+                        .filter(Matcher::matches)
+                        .map(matcher -> Integer.parseInt(matcher.group(2)))
+                        .collect(Collectors.toSet());
+
+        // Start at the top of the range and iterate down to increase the likelihood of getting an earlier match.
+        for (int port = 5680; port >= 5554; port -= 2) {
+            if (!reservedPorts.contains(port)) {
+                return port;
+            }
+        }
+
+        throw new GradleException("No viable emulator ports found");
+    }
+
     /**
      * Uses ADB to query for connected android emulators
      * @param adbProxy Used to query ADB
@@ -283,12 +311,9 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
         final String[] stdout = adbProxy.execute("devices");
         List<String> emulators = new ArrayList<>();
         for (final String line : stdout) {
-            final Matcher matcher = ADB_OUTPUT_PATTERN.matcher(line);
-            if (matcher.matches() && matcher.groupCount() == 2) {
-                // These emulator serial formats may change in the future and may lead to breakages
-                if (matcher.group(1).startsWith("emulator-") && matcher.group(2).equals("device")) {
-                    emulators.add(matcher.group(1));
-                }
+            final Matcher matcher = ADB_OUTPUT_EMULATOR_PATTERN.matcher(line);
+            if (matcher.matches()) {
+                emulators.add(matcher.group(1));
             }
         }
         return emulators;
@@ -297,33 +322,33 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
     private static void createWaitForEmulatorTask(final Project project, final EmulatorConfiguration emulatorConfiguration, final AdbProxy adbProxy, final AtomicReference<Process> waitForDeviceProcess) {
         project.getTasks().create(WAIT_FOR_ANDROID_EMULATOR_TASK_NAME, task -> {
             task.doFirst(t -> {
-                String serial = null;
-                // Attempt to find the emulator with the UUID. The shell will become available very early on in the boot
-                // process, even if though the device isn't suitable for running tests quite yet. There's a chance the
-                // emulator won't be visible to ADB right away, hence the need for a short loop with some sleeps.
-                for (int i = 0; i < 60 && serial == null; i++) {
-                    for (final String emulator : getConnectedEmulatorSerials(adbProxy)) {
-                        final String[] out = adbProxy.execute("-s", emulator, "wait-for-device", "shell", "getprop", "emu.uuid");
-                        if (out.length == 1 && out[0].equals(emulatorConfiguration.getEmulatorUuid())) {
-                            serial = emulator;
-                            break;
-                        }
-                    }
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        // Allow this to miss to give time
-                    }
-                }
-                if (serial == null) {
-                    throw new GradleException("Unable to detect plugin-managed emulator.");
-                }
+//                String serial = null;
+//                // Attempt to find the emulator with the UUID. The shell will become available very early on in the boot
+//                // process, even if though the device isn't suitable for running tests quite yet. There's a chance the
+//                // emulator won't be visible to ADB right away, hence the need for a short loop with some sleeps.
+//                for (int i = 0; i < 60 && serial == null; i++) {
+//                    for (final String emulator : getConnectedEmulatorSerials(adbProxy)) {
+//                        final String[] out = adbProxy.execute("-s", emulator, "wait-for-device", "shell", "getprop", "emu.uuid");
+//                        if (out.length == 1 && out[0].equals(emulatorConfiguration.getEmulatorUuid())) {
+//                            serial = emulator;
+//                            break;
+//                        }
+//                    }
+//                    try {
+//                        Thread.sleep(1000);
+//                    } catch (InterruptedException e) {
+//                        // Allow this to miss to give time
+//                    }
+//                }
+//                if (serial == null) {
+//                    throw new GradleException("Unable to detect plugin-managed emulator.");
+//                }
 
                 // The AdbProxy cannot be used here as the process needs to run asynchronously in order for it to be
                 // terminable if the Gradle run is aborted early.
                 final List<String> command = new ArrayList<>();
                 command.add(emulatorConfiguration.getAdb().getAbsolutePath());
-                command.addAll(l("-s", serial, "wait-for-device", "shell", "while $(exit $(getprop sys.boot_completed)) ; do sleep 1; done;"));
+                command.addAll(l("-s", "emulator-" + emulatorConfiguration.getEmulatorPort(), "wait-for-device", "shell", "while $(exit $(getprop sys.boot_completed)) ; do sleep 1; done;"));
                 final ProcessBuilder pb = new ProcessBuilder(command.toArray(new String[0]));
                 pb.environment().putAll(emulatorConfiguration.getEnvironmentVariableMap());
                 try {

@@ -47,6 +47,7 @@ class EmulatorConfiguration {
     private final String deviceType;
     private final String emulatorUuid;
     private final boolean forceColdStart;
+    private Integer emulatorPort;
 
     EmulatorConfiguration(final Project project, final BaseExtension androidExtension, final AndroidEmulatorExtension androidEmulatorExtension) {
         this.sdkRoot = androidExtension.getSdkDirectory();
@@ -147,7 +148,7 @@ class EmulatorConfiguration {
             } catch (final IOException e) {
                 throw new GradleException("Unable to read " + launchParamsFile.getAbsolutePath(), e);
             }
-            final String uuidParamPrefix = "emu.uuid=";
+            final String uuidParamPrefix = "-port=";
             for (final String line : contents) {
                 if (line.startsWith(uuidParamPrefix)) {
                     return line.substring(uuidParamPrefix.length());
@@ -298,11 +299,29 @@ class EmulatorConfiguration {
      *
      * @return A non-null, version 4 UUID.
      */
-    String getEmulatorUuid() {
-        return emulatorUuid;
-    }
+//    String getEmulatorUuid() {
+//        return emulatorUuid;
+//    }
 
     boolean shouldForceColdStart() {
         return forceColdStart;
+    }
+
+    /**
+     * When the plugin starts the emulator, it should bind it to a specify a port in the range 5554 to 5682 and call
+     * this method to set it for other tasks to use.
+     * See https://developer.android.com/studio/run/emulator-commandline#common for more details.
+     */
+    void setEmulatorPort(final int port) {
+        this.emulatorPort = port;
+    }
+
+    /**
+     * The port the emulator was bound to in the range 5554 to 5682. Note that if bound the port will always be even.
+     * See https://developer.android.com/studio/run/emulator-commandline#common for more details.
+     * @return The port the emulator should be bound to or null if not bound yet.
+     */
+    Integer getEmulatorPort() {
+        return this.emulatorPort;
     }
 }
