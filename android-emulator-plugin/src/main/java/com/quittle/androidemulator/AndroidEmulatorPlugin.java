@@ -234,12 +234,6 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
 
                 command.addAll(l("-port", String.valueOf(proposedEmulatorPort)));
 
-                // Forces the emulator to ignore the stored snapshot and cold start up. This is currently used to ensure the
-                // emulator has a predictable UUID associated with it.
-                if (emulatorConfiguration.shouldForceColdStart()) {
-                    command.add("-no-snapshot-load");
-                }
-
                 command.addAll(emulatorConfiguration.getAdditionalEmulatorArguments());
                 final ProcessBuilder pb = new ProcessBuilder(command.toArray(new String[0]));
                 pb.environment().putAll(emulatorConfiguration.getEnvironmentVariableMap());
@@ -302,48 +296,9 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
         throw new GradleException("No viable emulator ports found");
     }
 
-    /**
-     * Uses ADB to query for connected android emulators
-     * @param adbProxy Used to query ADB
-     * @return A list of all connected emulator serials, e.g. {@code emulator-5554}.
-     */
-    private static List<String> getConnectedEmulatorSerials(final AdbProxy adbProxy) {
-        final String[] stdout = adbProxy.execute("devices");
-        List<String> emulators = new ArrayList<>();
-        for (final String line : stdout) {
-            final Matcher matcher = ADB_OUTPUT_EMULATOR_PATTERN.matcher(line);
-            if (matcher.matches()) {
-                emulators.add(matcher.group(1));
-            }
-        }
-        return emulators;
-    }
-
     private static void createWaitForEmulatorTask(final Project project, final EmulatorConfiguration emulatorConfiguration, final AdbProxy adbProxy, final AtomicReference<Process> waitForDeviceProcess) {
         project.getTasks().create(WAIT_FOR_ANDROID_EMULATOR_TASK_NAME, task -> {
             task.doFirst(t -> {
-//                String serial = null;
-//                // Attempt to find the emulator with the UUID. The shell will become available very early on in the boot
-//                // process, even if though the device isn't suitable for running tests quite yet. There's a chance the
-//                // emulator won't be visible to ADB right away, hence the need for a short loop with some sleeps.
-//                for (int i = 0; i < 60 && serial == null; i++) {
-//                    for (final String emulator : getConnectedEmulatorSerials(adbProxy)) {
-//                        final String[] out = adbProxy.execute("-s", emulator, "wait-for-device", "shell", "getprop", "emu.uuid");
-//                        if (out.length == 1 && out[0].equals(emulatorConfiguration.getEmulatorUuid())) {
-//                            serial = emulator;
-//                            break;
-//                        }
-//                    }
-//                    try {
-//                        Thread.sleep(1000);
-//                    } catch (InterruptedException e) {
-//                        // Allow this to miss to give time
-//                    }
-//                }
-//                if (serial == null) {
-//                    throw new GradleException("Unable to detect plugin-managed emulator.");
-//                }
-
                 // The AdbProxy cannot be used here as the process needs to run asynchronously in order for it to be
                 // terminable if the Gradle run is aborted early.
                 final List<String> command = new ArrayList<>();
