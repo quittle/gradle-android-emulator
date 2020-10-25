@@ -36,7 +36,7 @@ rm -rf 'android-emulator-plugin/build'
 export ADB_INSTALL_TIMEOUT=10
 
 # Add additional gradle options for testing
-export GRADLE_OPTS="${GRADLE_OPTS} -Dorg.gradle.logging.level=debug"
+export GRADLE_OPTS="${GRADLE_OPTS} -Dorg.gradle.logging.level=info"
 
 # Run the test on the default (for the project) emulator as well as using the new Gradle plugin with an older SDK version
 # Run one after the other to ensure the plugin handles changing of configuration.
