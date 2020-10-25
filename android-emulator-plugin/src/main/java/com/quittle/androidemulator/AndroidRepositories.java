@@ -59,7 +59,6 @@ public class AndroidRepositories {
         }
     }
 
-    @SuppressWarnings("PMD.DataflowAnomalyAnalysis")
     public void addRepository(final String friendlyName, final URL url) throws AndroidRepositoryException {
         final int curCount;
         try {

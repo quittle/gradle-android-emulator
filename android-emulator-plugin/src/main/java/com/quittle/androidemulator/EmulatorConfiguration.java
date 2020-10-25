@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
-class EmulatorConfiguration {
+public class EmulatorConfiguration {
     /**
      * Paths to a folder containing {@code sdkmanager} relative to $SDK_ROOT. {@code null} entries indicate that the
      * folder in the path should be a version number and to select the highest revision possible. This
@@ -133,11 +133,11 @@ class EmulatorConfiguration {
         return path;
     }
 
-    File getSdkRoot() {
+    public File getSdkRoot() {
         return sdkRoot;
     }
 
-    File sdkFile(String... path) {
+    public File sdkFile(String... path) {
         return sdkFile(sdkRoot, path);
     }
 
@@ -148,7 +148,7 @@ class EmulatorConfiguration {
      * @return The {@code sdkmanager} file location, which is guaranteed to exist and be a file if returned.
      * @throws RuntimeException if no {@code sdkmanager} to use can be found on disk.
      */
-    File getSdkManager() throws RuntimeException {
+    public File getSdkManager() throws RuntimeException {
         for (final String[] path : POTENTIAL_INITIAL_SDK_MANAGER_PATHS) {
             final File basePath = sdkFile(sdkRoot, path);
             if (basePath != null) {
@@ -166,7 +166,7 @@ class EmulatorConfiguration {
         throw new RuntimeException("Unable to find a valid sdkmanager to use.");
     }
 
-    File getCmdLineToolsSdkManager() {
+    public File getCmdLineToolsSdkManager() {
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
             return sdkFile(sdkRoot, "cmdline-tools", "latest", "bin", "sdkmanager.bat");
         } else {
@@ -174,7 +174,7 @@ class EmulatorConfiguration {
         }
     }
 
-    File getAvdManager() {
+    public File getAvdManager() {
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
             return sdkFile(sdkRoot, "cmdline-tools", "latest", "bin", "avdmanager.bat");
         } else {
@@ -182,7 +182,7 @@ class EmulatorConfiguration {
         }
     }
 
-    File getEmulator() {
+    public File getEmulator() {
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
             return sdkFile(sdkRoot, "emulator", "emulator.exe");
         } else {
@@ -190,7 +190,7 @@ class EmulatorConfiguration {
         }
     }
 
-    File getAdb() {
+    public File getAdb() {
         if (Os.isFamily(Os.FAMILY_WINDOWS)) {
             return sdkFile(sdkRoot, "platform-tools", "adb.exe");
         } else {
@@ -198,47 +198,47 @@ class EmulatorConfiguration {
         }
     }
 
-    File getAvdRoot() {
+    public File getAvdRoot() {
         return avdRoot;
     }
 
-    Map<String, String> getEnvironmentVariableMap() {
+    public Map<String, String> getEnvironmentVariableMap() {
         return environmentVariableMap;
     }
 
-    boolean getEnableForAndroidTests() {
+    public boolean getEnableForAndroidTests() {
         return enableForAndroidTests;
     }
 
-    List<String> getAdditionalEmulatorArguments() {
+    public List<String> getAdditionalEmulatorArguments() {
         return additionalEmulatorArguments;
     }
 
-    boolean getLogEmulatorOutput() {
+    public boolean getLogEmulatorOutput() {
         return logEmulatorOutput;
     }
 
-    String getAndroidVersion() {
+    public String getAndroidVersion() {
         return androidVersion;
     }
 
-    String getFlavor() {
+    public String getFlavor() {
         return flavor;
     }
 
-    String getAbi() {
+    public String getAbi() {
         return abi;
     }
 
-    String getSystemImagePackageName() {
+    public String getSystemImagePackageName() {
         return systemImagePackageName;
     }
 
-    String getEmulatorName() {
+    public String getEmulatorName() {
         return emulatorName;
     }
 
-    String getDeviceType() {
+    public String getDeviceType() {
         return deviceType;
     }
 
@@ -246,8 +246,9 @@ class EmulatorConfiguration {
      * When the plugin starts the emulator, it should bind it to a specify a port in the range 5554 to 5682 and call
      * this method to set it for other tasks to use.
      * See https://developer.android.com/studio/run/emulator-commandline#common for more details.
+     * @param port The port to be bound to the emulator.
      */
-    void setEmulatorPort(final int port) {
+    public void setEmulatorPort(final int port) {
         this.emulatorPort = port;
     }
 
@@ -256,7 +257,7 @@ class EmulatorConfiguration {
      * See https://developer.android.com/studio/run/emulator-commandline#common for more details.
      * @return The port the emulator should be bound to or null if not bound yet.
      */
-    Integer getEmulatorPort() {
+    public Integer getEmulatorPort() {
         return this.emulatorPort;
     }
 }

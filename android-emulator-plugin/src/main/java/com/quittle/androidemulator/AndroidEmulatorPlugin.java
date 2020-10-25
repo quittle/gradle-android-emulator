@@ -2,34 +2,14 @@ package com.quittle.androidemulator;
 
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
-import org.apache.commons.io.IOUtils;
-import org.gradle.api.*;
-import org.gradle.api.logging.Logger;
-import org.gradle.api.tasks.AbstractExecTask;
-import org.gradle.api.tasks.Exec;
-import org.gradle.api.tasks.TaskExecutionException;
+import com.quittle.androidemulator.task.*;
+import org.gradle.api.Plugin;
+import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.tasks.TaskInstantiationException;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.UnaryOperator;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-@SuppressWarnings("PMD.DataflowAnomalyAnalysis")
 public class AndroidEmulatorPlugin implements Plugin<Project> {
     public static final String ENSURE_BASE_SDK_PERMISSIONS_TASK_NAME = "ensureBaseSdkPermissionsForAndroidEmulatorPlugin";
     public static final String ENSURE_INSTALLED_SDK_PERMISSIONS_TASK_NAME = "ensureInstalledSdkPermissionsForAndroidEmulatorPlugin";
@@ -40,24 +20,6 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
     public static final String START_ANDROID_EMULATOR_TASK_NAME = "startAndroidEmulator";
     public static final String WAIT_FOR_ANDROID_EMULATOR_TASK_NAME = "waitForAndroidEmulator";
     public static final String STOP_ANDROID_EMULATOR_TASK_NAME = "stopAndroidEmulator";
-    /**
-     * This is matching adb output lines. These emulator serial formats may change in the future and may lead to
-     * breakages. Example ADB Output
-     * <pre>{@code
-     * List of devices attached
-     * emulator-5554       device
-     * 192.168.1.2:42839   device
-     * }</pre>
-     */
-    private static final Pattern ADB_OUTPUT_EMULATOR_PATTERN = Pattern.compile("(emulator-(\\d{1,5}))\\s+device");
-    private static final UnaryOperator<Process> DESTROY_AND_REPLACE_WITH_NULL = process -> {
-        if (process != null) {
-            process.destroy();
-            process.destroyForcibly();
-        }
-
-        return null;
-    };
 
     private static void setUpAndroidTests(final Project project) {
         project.getTasks().withType(
@@ -67,114 +29,34 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
                 });
     }
 
-    /**
-     * Ensures given file is executable, and if not, tries promote file to be executable
-     *
-     * @return true, if file is executable
-     */
-    private static boolean ensureFileIsExecutable(final File file) {
-        // First check if file is executable. In most environments sdk binaries are already executable.
-        // In some environments your process is not an owner of the file and can't change permission.
-        // For example docker or CI
-        return file.canExecute() || file.setExecutable(true);
-    }
-
     private static void createEnsurePermissionsTasks(final Project project, final EmulatorConfiguration emulatorConfiguration) {
-        project.getTasks().create(ENSURE_BASE_SDK_PERMISSIONS_TASK_NAME, task -> {
-            task.doFirst(t -> {
-                if (!ensureFileIsExecutable(emulatorConfiguration.getSdkManager())) {
-                    throw new RuntimeException("Unable to make SDK Manager executable");
-                }
+        project.getTasks().create(ENSURE_BASE_SDK_PERMISSIONS_TASK_NAME, EnsureBaseSdkPermissions.class, emulatorConfiguration);
 
-                if (!ensureFileIsExecutable(emulatorConfiguration.getAdb())) {
-                    throw new RuntimeException(("Unable to make ADB executable"));
-                }
-            });
-        });
-
-        project.getTasks().create(ENSURE_INSTALLED_SDK_PERMISSIONS_TASK_NAME, task -> {
-            task.doFirst(t -> {
-                if (!ensureFileIsExecutable(emulatorConfiguration.getCmdLineToolsSdkManager())) {
-                    throw new RuntimeException("Unable to make new SDK Manager executable");
-                }
-
-                if (!ensureFileIsExecutable(emulatorConfiguration.getAvdManager())) {
-                    throw new RuntimeException("Unable to make Android Virtual Device manager executable");
-                }
-            });
-
-            task.dependsOn(INSTALL_SDK_DEPENDENCIES_TASK_NAME);
-        });
+        final Task ensureInstalledSdkPermissionsTask = project.getTasks().create(ENSURE_INSTALLED_SDK_PERMISSIONS_TASK_NAME, EnsureInstalledSdkPermissionsTask.class, emulatorConfiguration);
+        ensureInstalledSdkPermissionsTask.dependsOn(INSTALL_SDK_DEPENDENCIES_TASK_NAME);
     }
 
     private static void createAddAdditionalSdkRepositoriesTask(final Project project) {
-        project.getTasks().create(ADD_ADDITIONAL_SDK_REPOSITORIES_TASK_NAME, task -> {
-            task.doFirst(t -> {
-                try {
-                    final AndroidRepositories repositories = AndroidRepositories.load();
-                    repositories.addRepository("Legacy Google APIs System Images", new URL("https://dl.google.com/android/repository/sys-img/google_apis/sys-img.xml"));
-                    repositories.addRepository("Legacy Android System Images", new URL("https://dl.google.com/android/repository/sys-img/android/sys-img.xml"));
-                    repositories.save();
-                } catch (AndroidRepositoryException | MalformedURLException e) {
-                    throw new TaskExecutionException(t, e);
-                }
-            });
-        });
+        project.getTasks().create(ADD_ADDITIONAL_SDK_REPOSITORIES_TASK_NAME, AddAdditionalSdkRepositoriesTask.class);
     }
 
     private static void createInstallSdkDependenciesTask(final Project project, final EmulatorConfiguration emulatorConfiguration) {
-        createExecTask(project, emulatorConfiguration, INSTALL_SDK_DEPENDENCIES_TASK_NAME, exec -> {
-            exec.setExecutable(emulatorConfiguration.getSdkManager());
-            exec.setArgs(l(getSdkRootArgument(emulatorConfiguration), "emulator", "cmdline-tools;latest"));
-            exec.setStandardInput(buildStandardInLines("y"));
-            exec.getOutputs().dir(new File(emulatorConfiguration.getSdkRoot(), "emulator"));
-
-            exec.dependsOn(ENSURE_BASE_SDK_PERMISSIONS_TASK_NAME);
-
-            // This cannot be a lambda or the task will never be considered up-to-date
-            exec.doLast(new Action<Task>() {
-                @Override
-                public void execute(final Task task) {
-                    if (!emulatorConfiguration.getEmulator().setExecutable(true)) {
-                        throw new RuntimeException("Unable to make android emulator executable");
-                    }
-                }
-            });
-        });
+        final Task task = project.getTasks().create(INSTALL_SDK_DEPENDENCIES_TASK_NAME, InstallSdkDependenciesTask.class, emulatorConfiguration);
+        task.dependsOn(ENSURE_BASE_SDK_PERMISSIONS_TASK_NAME);
     }
 
     private static void createInstallEmulatorSystemImageTask(final Project project, final EmulatorConfiguration emulatorConfiguration) {
-        createExecTask(project, emulatorConfiguration, INSTALL_ANDROID_EMULATOR_SYSTEM_IMAGE_TASK_NAME, exec -> {
-            exec.setExecutable(emulatorConfiguration.getCmdLineToolsSdkManager());
-            exec.setArgs(l(getSdkRootArgument(emulatorConfiguration), emulatorConfiguration.getSystemImagePackageName()));
-            exec.setStandardInput(buildStandardInLines("y"));
-            exec.getOutputs().dir(emulatorConfiguration.sdkFile("system-images", emulatorConfiguration.getAndroidVersion(), emulatorConfiguration.getFlavor(), emulatorConfiguration.getAbi()));
-            exec.getOutputs().file(emulatorConfiguration.sdkFile("system-images", emulatorConfiguration.getAndroidVersion(), emulatorConfiguration.getFlavor(), emulatorConfiguration.getAbi(), "system.img"));
-            exec.dependsOn(ENSURE_INSTALLED_SDK_PERMISSIONS_TASK_NAME, ADD_ADDITIONAL_SDK_REPOSITORIES_TASK_NAME);
-        });
+        final Task task = project.getTasks().create(INSTALL_ANDROID_EMULATOR_SYSTEM_IMAGE_TASK_NAME, InstallAndroidEmulatorSystemImageTask.class, emulatorConfiguration);
+        task.dependsOn(ENSURE_INSTALLED_SDK_PERMISSIONS_TASK_NAME, ADD_ADDITIONAL_SDK_REPOSITORIES_TASK_NAME);
     }
 
     private static void createCreateEmulatorTask(final Project project, final EmulatorConfiguration emulatorConfiguration) {
-        final File avdRoot = emulatorConfiguration.getAvdRoot();
-        final String emulatorName = emulatorConfiguration.getEmulatorName();
-        final String emulatorDevice = emulatorConfiguration.getDeviceType();
-        createExecTask(project, emulatorConfiguration, CREATE_ANDROID_EMULATOR_TASK_NAME, exec -> {
-            exec.setExecutable(emulatorConfiguration.getAvdManager());
-            List<String> args = l("create", "avd", "--name", emulatorName, "--package", emulatorConfiguration.getSystemImagePackageName(), "--force");
-            if (emulatorDevice != null) {
-                args.add("--device");
-                args.add(emulatorDevice);
-            }
-            exec.setArgs(args);
-            exec.setStandardInput(buildStandardInLines("no"));
-            exec.getOutputs().dir(new File(avdRoot, emulatorName + ".avd"));
-            exec.getOutputs().file(new File(avdRoot, emulatorName + ".ini"));
-
-            exec.dependsOn(
-                    INSTALL_ANDROID_EMULATOR_SYSTEM_IMAGE_TASK_NAME,
-                    INSTALL_SDK_DEPENDENCIES_TASK_NAME,
-                    ENSURE_INSTALLED_SDK_PERMISSIONS_TASK_NAME);
-        });
+        final Task createEmulatorTask = project.getTasks().create(
+                CREATE_ANDROID_EMULATOR_TASK_NAME, CreateEmulatorExecTask.class, emulatorConfiguration);
+        createEmulatorTask.dependsOn(
+                INSTALL_ANDROID_EMULATOR_SYSTEM_IMAGE_TASK_NAME,
+                INSTALL_SDK_DEPENDENCIES_TASK_NAME,
+                ENSURE_INSTALLED_SDK_PERMISSIONS_TASK_NAME);
     }
 
     private static void createEmulatorLifecycleTasks(final Project project, final EmulatorConfiguration emulatorConfiguration, final AdbProxy adbProxy) {
@@ -182,33 +64,8 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
         final AtomicReference<Process> waitForDeviceProcess = new AtomicReference<>();
 
         createStartEmulatorTask(project, emulatorConfiguration, adbProxy, emulatorProcess, waitForDeviceProcess);
-        createWaitForEmulatorTask(project, emulatorConfiguration, adbProxy, waitForDeviceProcess);
+        createWaitForEmulatorTask(project, emulatorConfiguration, waitForDeviceProcess);
         createStopEmulatorTask(project, emulatorProcess);
-    }
-
-    /**
-     * Logs emulator output via new threads.
-     *
-     * @param process The process to log the output of
-     * @param logger  The logger to report output with
-     */
-    private static void logOutput(final Process process, final Logger logger) {
-        final InputStream stdout = process.getInputStream(); // NOPMD - These can't be closed outside of the thread
-        final InputStream stderr = process.getErrorStream(); // NOPMD - These can't be closed outside of the thread
-        new Thread(() -> {
-            try (final InputStream stream = stdout) {
-                IOUtils.lineIterator(stream, StandardCharsets.UTF_8).forEachRemaining(s -> logger.info("[Android Emulator - STDOUT] " + s));
-            } catch (IOException | IllegalStateException e) {
-                logger.error("Error reading Android emulator stdout", e);
-            }
-        }).start();
-        new Thread(() -> {
-            try (final InputStream stream = stderr) {
-                IOUtils.lineIterator(stream, StandardCharsets.UTF_8).forEachRemaining(s -> logger.info("[Android Emulator - STDERR] " + s));
-            } catch (IOException | IllegalStateException e) {
-                logger.error("Error reading Android emulator stderr", e);
-            }
-        }).start();
     }
 
     private static void createStartEmulatorTask(
@@ -217,149 +74,24 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
             final AdbProxy adbProxy,
             final AtomicReference<Process> emulatorProcess,
             final AtomicReference<Process> waitForDeviceProcess) {
-        project.getTasks().create(START_ANDROID_EMULATOR_TASK_NAME, task -> {
-            task.doFirst(t -> {
-                final boolean logEmulatorOutput = emulatorConfiguration.getLogEmulatorOutput();
+        final Task task = project.getTasks().create(START_ANDROID_EMULATOR_TASK_NAME, StartAndroidEmulatorTask.class,
+                emulatorConfiguration, adbProxy, emulatorProcess, waitForDeviceProcess);
 
-                final int proposedEmulatorPort = findAcceptableEmulatorPort(adbProxy);
-                emulatorConfiguration.setEmulatorPort(proposedEmulatorPort);
-
-                final List<String> command = new ArrayList<>();
-                command.add(emulatorConfiguration.getEmulator().getAbsolutePath());
-                command.add("@" + emulatorConfiguration.getEmulatorName());
-
-                // Allows the plugin to monitor the logs from the emulator and start the emulator synchronously. Without this,
-                // the emulator would be detached from the process being build and be much more difficult to shut down.
-                command.add("-shell");
-
-                command.addAll(l("-port", String.valueOf(proposedEmulatorPort)));
-
-                command.addAll(emulatorConfiguration.getAdditionalEmulatorArguments());
-                final ProcessBuilder pb = new ProcessBuilder(command.toArray(new String[0]));
-                pb.environment().putAll(emulatorConfiguration.getEnvironmentVariableMap());
-                if (!logEmulatorOutput) {
-                    pb.inheritIO();
-                }
-
-                final Logger logger = project.getLogger();
-                logger.debug("Starting emulator with command {} {}", pb.environment(), pb.command());
-                try {
-                    final Process directProcess = pb.start();
-                    emulatorProcess.set(directProcess);
-                    if (logEmulatorOutput) {
-                        logOutput(directProcess, logger);
-                    }
-                    new Thread(() -> {
-                        final int returnCode;
-                        try {
-                            returnCode = directProcess.waitFor();
-                        } catch (InterruptedException e) {
-                            logger.warn("Interrupted while watching emulator process", e);
-                            // Do nothing
-                            return;
-                        }
-
-                        if (returnCode != 0) {
-                            final Process p = waitForDeviceProcess.get();
-                            if (p != null) {
-                                p.destroy();
-                            }
-                            logger.error("Emulator exited abnormally with return code " + returnCode);
-                        }
-                    }).start();
-                    Runtime.getRuntime().addShutdownHook(new Thread(() -> emulatorProcess.getAndUpdate(DESTROY_AND_REPLACE_WITH_NULL)));
-                } catch (final IOException e) {
-                    throw new RuntimeException("Emulator failed to start successfully", e);
-                }
-            });
-
-            task.dependsOn(ENSURE_INSTALLED_SDK_PERMISSIONS_TASK_NAME, INSTALL_SDK_DEPENDENCIES_TASK_NAME, CREATE_ANDROID_EMULATOR_TASK_NAME);
-            task.finalizedBy(STOP_ANDROID_EMULATOR_TASK_NAME);
-        });
+        task.dependsOn(ENSURE_INSTALLED_SDK_PERMISSIONS_TASK_NAME, INSTALL_SDK_DEPENDENCIES_TASK_NAME, CREATE_ANDROID_EMULATOR_TASK_NAME);
+        task.finalizedBy(STOP_ANDROID_EMULATOR_TASK_NAME);
     }
 
-    private static int findAcceptableEmulatorPort(final AdbProxy adbProxy) {
-        final Set<Integer> reservedPorts =
-                Stream.of(adbProxy.execute("devices"))
-                        .map(ADB_OUTPUT_EMULATOR_PATTERN::matcher)
-                        .filter(Matcher::matches)
-                        .map(matcher -> Integer.parseInt(matcher.group(2)))
-                        .collect(Collectors.toSet());
+    private static void createWaitForEmulatorTask(final Project project, final EmulatorConfiguration emulatorConfiguration, final AtomicReference<Process> waitForDeviceProcess) {
+        final Task task = project.getTasks().create(WAIT_FOR_ANDROID_EMULATOR_TASK_NAME, WaitForAndroidEmulatorTask.class, emulatorConfiguration, waitForDeviceProcess);
 
-        // Start at the top of the range and iterate down to increase the likelihood of getting an earlier match.
-        for (int port = 5680; port >= 5554; port -= 2) {
-            if (!reservedPorts.contains(port)) {
-                return port;
-            }
-        }
-
-        throw new GradleException("No viable emulator ports found");
-    }
-
-    private static void createWaitForEmulatorTask(final Project project, final EmulatorConfiguration emulatorConfiguration, final AdbProxy adbProxy, final AtomicReference<Process> waitForDeviceProcess) {
-        project.getTasks().create(WAIT_FOR_ANDROID_EMULATOR_TASK_NAME, task -> {
-            task.doFirst(t -> {
-                // The AdbProxy cannot be used here as the process needs to run asynchronously in order for it to be
-                // terminable if the Gradle run is aborted early.
-                final List<String> command = new ArrayList<>();
-                command.add(emulatorConfiguration.getAdb().getAbsolutePath());
-                command.addAll(l("-s", "emulator-" + emulatorConfiguration.getEmulatorPort(), "wait-for-device", "shell", "while $(exit $(getprop sys.boot_completed)) ; do sleep 1; done;"));
-                final ProcessBuilder pb = new ProcessBuilder(command.toArray(new String[0]));
-                pb.environment().putAll(emulatorConfiguration.getEnvironmentVariableMap());
-                try {
-                    final Process p = pb.start();
-                    waitForDeviceProcess.set(p);
-                    p.waitFor();
-                } catch (IOException | InterruptedException e) {
-                    throw new RuntimeException("Unable to wait for emulator", e);
-                }
-            });
-
-            task.getInputs().property("environmentMaps", emulatorConfiguration.getEnvironmentVariableMap());
-            task.dependsOn(ENSURE_BASE_SDK_PERMISSIONS_TASK_NAME, START_ANDROID_EMULATOR_TASK_NAME);
-        });
+        task.dependsOn(ENSURE_BASE_SDK_PERMISSIONS_TASK_NAME, START_ANDROID_EMULATOR_TASK_NAME);
     }
 
     private static void createStopEmulatorTask(final Project project, final AtomicReference<Process> emulatorProcess) {
-        project.getTasks().create(STOP_ANDROID_EMULATOR_TASK_NAME, task -> {
-            task.doFirst(t -> emulatorProcess.getAndUpdate(DESTROY_AND_REPLACE_WITH_NULL));
+        final Task task = project.getTasks().create(STOP_ANDROID_EMULATOR_TASK_NAME, StopAndroidEmulatorTask.class, emulatorProcess);
 
-            task.dependsOn(ENSURE_INSTALLED_SDK_PERMISSIONS_TASK_NAME, START_ANDROID_EMULATOR_TASK_NAME);
-            task.mustRunAfter(WAIT_FOR_ANDROID_EMULATOR_TASK_NAME);
-        });
-    }
-
-    /**
-     * Generates the argument for specifying {@code --sdk_root} for the new {@code sdkmanager} which requires it.
-     */
-    private static String getSdkRootArgument(final EmulatorConfiguration emulatorConfiguration) {
-        return "--sdk_root=" + emulatorConfiguration.getSdkRoot().getAbsolutePath();
-    }
-
-    private static Task createExecTask(final Project project,
-                                       final EmulatorConfiguration emulatorConfiguration,
-                                       final String name,
-                                       final Action<AbstractExecTask<Exec>> configure) {
-        return project.getTasks().create(name, Exec.class, (final Exec task) -> {
-            task.environment(emulatorConfiguration.getEnvironmentVariableMap());
-
-            configure.execute(task);
-
-            task.getInputs().property("environmentMaps", emulatorConfiguration.getEnvironmentVariableMap());
-            task.getInputs().property("command", task.getCommandLine());
-        });
-    }
-
-    @SafeVarargs
-    @SuppressWarnings("varargs")
-    private static <T> ArrayList<T> l(T... arr) {
-        return new ArrayList<>(Arrays.asList(arr));
-    }
-
-    private static InputStream buildStandardInLines(String... lines) {
-        final String string = String.join(System.lineSeparator(), lines);
-        final byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
-        return new ByteArrayInputStream(bytes);
+        task.dependsOn(ENSURE_INSTALLED_SDK_PERMISSIONS_TASK_NAME, START_ANDROID_EMULATOR_TASK_NAME);
+        task.mustRunAfter(WAIT_FOR_ANDROID_EMULATOR_TASK_NAME);
     }
 
     @Override
@@ -379,7 +111,6 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
             if (emulatorConfiguration.getEnableForAndroidTests()) {
                 setUpAndroidTests(p);
             }
-
 
             createEnsurePermissionsTasks(p, emulatorConfiguration);
             createAddAdditionalSdkRepositoriesTask(p);

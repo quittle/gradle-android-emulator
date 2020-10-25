@@ -3,5 +3,6 @@
     <description>Custom</description>
     <rule ref="category/java/errorprone.xml">
         <exclude name="BeanMembersShouldSerialize"/>
+        <exclude name="DataflowAnomalyAnalysis"/>
     </rule>
 </ruleset>
