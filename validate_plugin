@@ -36,7 +36,7 @@ rm -rf 'android-emulator-plugin/build'
 export ADB_INSTALL_TIMEOUT=10
 
 # Add additional gradle options for testing
-export GRADLE_OPTS="${GRADLE_OPTS} -Dorg.gradle.logging.level=info"
+export GRADLE_OPTS="${GRADLE_OPTS} -Dorg.gradle.logging.level=debug"
 
 # Run the test on the default (for the project) emulator as well as using the new Gradle plugin with an older SDK version
 # Run one after the other to ensure the plugin handles changing of configuration.
@@ -83,12 +83,12 @@ fi
 
 # Use the emulator's device field by specifying the device type
 if should_run_target 8; then
-    ANDROID_EMULATOR_SDK_VERSION=24 ANDROID_EMULATOR_DEVICE=pixel_xl ./gradlew -p example-android-project connectedCheck
+    ANDROID_EMULATOR_SDK_VERSION=24 ANDROID_EMULATOR_DEVICE=pixel_xl ./gradlew -S -p example-android-project connectedCheck
 fi
 
 # Use the device field by specifying the device code
 if should_run_target 9; then
-    ANDROID_EMULATOR_SDK_VERSION=24 ANDROID_EMULATOR_DEVICE=19 ./gradlew -p example-android-project connectedCheck
+    ANDROID_EMULATOR_SDK_VERSION=24 ANDROID_EMULATOR_DEVICE=19 ./gradlew -S -p example-android-project connectedCheck
 fi
 
 # Use the latest Gradle plugin
