@@ -6,7 +6,6 @@ import org.gradle.api.tasks.TaskAction;
 
 import javax.inject.Inject;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -25,13 +24,12 @@ public class WaitForAndroidEmulatorTask extends DefaultTask {
     public void act() {
         // The AdbProxy cannot be used here as the process needs to run asynchronously in order for it to be
         // terminable if the Gradle run is aborted early.
-        final List<String> command = new ArrayList<>();
-        command.add(emulatorConfiguration.getAdb().getAbsolutePath());
-        command.addAll(Arrays.asList(
+        final List<String> command = Arrays.asList(
+                emulatorConfiguration.getAdb().getAbsolutePath(),
                 "-s", "emulator-" + emulatorConfiguration.getEmulatorPort(),
                 "wait-for-device",
                 "shell",
-                "while $(exit $(getprop sys.boot_completed)) ; do sleep 1; done;"));
+                "while $(exit $(getprop sys.boot_completed)) ; do sleep 1; done;");
         final ProcessBuilder pb = new ProcessBuilder(command.toArray(new String[0]));
         pb.environment().putAll(emulatorConfiguration.getEnvironmentVariableMap());
         try {

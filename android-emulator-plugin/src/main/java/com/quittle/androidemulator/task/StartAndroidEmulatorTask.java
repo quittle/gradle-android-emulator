@@ -75,9 +75,13 @@ public class StartAndroidEmulatorTask extends DefaultTask {
         // the emulator would be detached from the process being build and be much more difficult to shut down.
         command.add("-shell");
 
-        command.addAll(Arrays.asList("-port", String.valueOf(proposedEmulatorPort)));
+        // Adds the port the emulator should start on. This is specified to enable targeting via ADB commands.
+        command.add("-port");
+        command.add(String.valueOf(proposedEmulatorPort));
 
+        // User-specified arguments
         command.addAll(emulatorConfiguration.getAdditionalEmulatorArguments());
+
         final ProcessBuilder pb = new ProcessBuilder(command.toArray(new String[0]));
         pb.environment().putAll(emulatorConfiguration.getEnvironmentVariableMap());
         if (!logEmulatorOutput) {
