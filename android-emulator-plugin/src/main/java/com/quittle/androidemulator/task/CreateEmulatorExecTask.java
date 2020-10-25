@@ -4,8 +4,9 @@ import com.quittle.androidemulator.EmulatorConfiguration;
 
 import javax.inject.Inject;
 import java.io.File;
-import java.util.Arrays;
 import java.util.List;
+
+import static com.quittle.androidemulator.CollectionUtils.mutableListOf;
 
 public class CreateEmulatorExecTask extends AndroidEmulatorBaseExecTask<CreateEmulatorExecTask> {
     @Inject
@@ -18,7 +19,7 @@ public class CreateEmulatorExecTask extends AndroidEmulatorBaseExecTask<CreateEm
         final String systemImagePackageName = emulatorConfiguration.getSystemImagePackageName();
 
         this.setExecutable(emulatorConfiguration.getAvdManager());
-        List<String> args = Arrays.asList(
+        List<String> args = mutableListOf(
                 "create",
                 "avd",
                 "--name", emulatorName,

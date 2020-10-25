@@ -1,6 +1,7 @@
 package com.quittle.androidemulator.task;
 
 import com.quittle.androidemulator.EmulatorConfiguration;
+import org.gradle.api.tasks.InputFiles;
 
 import javax.inject.Inject;
 import java.io.File;
@@ -13,6 +14,7 @@ public class EnsureInstalledSdkPermissionsTask extends EnsureFilesAreExecutableT
         this.emulatorConfiguration = emulatorConfiguration;
     }
 
+    @InputFiles
     @Override
     protected File[] getFilesToMakeExecutable() {
         return new File[] {

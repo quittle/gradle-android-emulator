@@ -1,6 +1,7 @@
 package com.quittle.androidemulator.task;
 
 import org.gradle.api.DefaultTask;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
@@ -21,5 +22,6 @@ public abstract class EnsureFilesAreExecutableTask extends DefaultTask {
         }
     }
 
+    @InputFiles
     abstract protected File[] getFilesToMakeExecutable();
 }
