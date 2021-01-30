@@ -2,21 +2,14 @@ package com.quittle.androidemulator.task;
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.TaskExecutionException;
 
 import javax.inject.Inject;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
 
 public class StopAndroidEmulatorTask extends DefaultTask {
-    private static final UnaryOperator<Process> DESTROY_AND_REPLACE_WITH_NULL = process -> {
-        if (process != null) {
-            process.destroy();
-            process.destroyForcibly();
-        }
-
-        return null;
-    };
-
     final AtomicReference<Process> emulatorProcess;
 
     @Inject
@@ -26,6 +19,6 @@ public class StopAndroidEmulatorTask extends DefaultTask {
 
     @TaskAction
     public void act() {
-        emulatorProcess.getAndUpdate(DESTROY_AND_REPLACE_WITH_NULL);
+        emulatorProcess.getAndUpdate(new ProcessDestroyer(getProject()));
     }
 }

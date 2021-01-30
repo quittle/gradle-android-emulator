@@ -15,7 +15,7 @@ public class InstallSdkDependenciesTask extends AndroidEmulatorBaseExecTask<Inst
         super(InstallSdkDependenciesTask.class, emulatorConfiguration);
 
         this.setExecutable(emulatorConfiguration.getSdkManager());
-        this.setArgs(Arrays.asList(buildSdkRootArgument(), "emulator", "cmdline-tools;latest"));
+        this.setArgs(Arrays.asList(buildSdkRootArgument(), "emulator", "cmdline-tools;latest", "platform-tools"));
         this.setStandardInput(buildStandardInLines("y"));
         this.getOutputs().dir(new File(emulatorConfiguration.getSdkRoot(), "emulator"));
 

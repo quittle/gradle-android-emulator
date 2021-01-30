@@ -34,14 +34,6 @@ public class StartAndroidEmulatorTask extends DefaultTask {
      * }</pre>
      */
     private static final Pattern ADB_OUTPUT_EMULATOR_PATTERN = Pattern.compile("(emulator-(\\d{1,5}))\\s+device");
-    private static final UnaryOperator<Process> DESTROY_AND_REPLACE_WITH_NULL = process -> {
-        if (process != null) {
-            process.destroy();
-            process.destroyForcibly();
-        }
-
-        return null;
-    };
 
     private final EmulatorConfiguration emulatorConfiguration;
     private final AdbProxy adbProxy;
@@ -107,14 +99,15 @@ public class StartAndroidEmulatorTask extends DefaultTask {
                 }
 
                 if (returnCode != 0) {
+                    logger.error("Emulator exited abnormally with return code " + returnCode);
                     final Process p = waitForDeviceProcess.get();
                     if (p != null) {
-                        p.destroy();
+                        p.destroyForcibly();
                     }
-                    logger.error("Emulator exited abnormally with return code " + returnCode);
                 }
             }).start();
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> emulatorProcess.getAndUpdate(DESTROY_AND_REPLACE_WITH_NULL)));
+            Runtime.getRuntime().addShutdownHook(new Thread(() ->
+                    emulatorProcess.getAndUpdate(new ProcessDestroyer(getProject()))));
         } catch (final IOException e) {
             throw new RuntimeException("Emulator failed to start successfully", e);
         }
