@@ -96,3 +96,5 @@ androidEmulator {
     logEmulatorOutput LOG_ANDROID_EMULATOR
     logEmulatorOutput = LOG_ANDROID_EMULATOR
 }
+
+com.android.ddmlib.DdmPreferences.setTimeOut(30000)
