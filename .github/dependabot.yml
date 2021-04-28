@@ -1,0 +1,36 @@
+version: 2
+updates:
+- package-ecosystem: gradle
+  directory: "/android-emulator-plugin"
+  schedule:
+    interval: weekly
+    day: friday
+    time: "18:00"
+    timezone: Europe/London
+  open-pull-requests-limit: 99
+  reviewers:
+  - quittle
+  assignees:
+  - quittle
+  labels:
+  - dependencies
+  ignore:
+  - dependency-name: io.mockk:mockk
+    versions:
+    - 1.10.4
+    - 1.10.5
+    - 1.10.6
+  - dependency-name: com.gradle.plugin-publish
+    versions:
+    - 0.13.0
+  - dependency-name: org.mockito:mockito-junit-jupiter
+    versions:
+    - 3.7.7
+    - 3.8.0
+  - dependency-name: com.github.spotbugs
+    versions:
+    - 4.6.2
+  - dependency-name: com.android.tools.build:gradle
+    versions:
+    - 4.1.1
+    - 4.1.2
