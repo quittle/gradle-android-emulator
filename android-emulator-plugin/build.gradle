@@ -12,7 +12,7 @@ import com.github.spotbugs.snom.SpotBugsTask
 import org.eclipse.jgit.api.Git
 
 plugins {
-    id 'com.github.spotbugs' version '4.6.0'
+    id 'com.github.spotbugs' version '4.7.2'
     id 'com.gradle.plugin-publish' version '0.12.0'
     id 'java-gradle-plugin'
     id 'maven-publish'
