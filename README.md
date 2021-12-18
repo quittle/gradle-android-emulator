@@ -1,4 +1,4 @@
-# Android Emulator Plugin [![Gradle Plugin Version](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/com/quittle/android-emulator-plugin/maven-metadata.xml.svg?label=Gradle+Plugin+Version)](https://plugins.gradle.org/plugin/com.quittle.android-emulator) [![Build Status](https://travis-ci.com/quittle/gradle-android-emulator.svg?branch=main)](https://travis-ci.com/quittle/gradle-android-emulator)
+# Android Emulator Plugin [![Gradle Plugin Version](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/com/quittle/android-emulator-plugin/maven-metadata.xml.svg?label=Gradle+Plugin+Version)](https://plugins.gradle.org/plugin/com.quittle.android-emulator) [![CircleCI](https://circleci.com/gh/quittle/gradle-android-emulator/tree/main.svg?style=svg)](https://circleci.com/gh/quittle/gradle-android-emulator/tree/main)
 
 This plugin adds tasks that install an Android emulator and start it up when running instrumentation tests
 installs the Android Emulator and starts it up when running the instrumentation tests. Includes configuration

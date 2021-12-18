@@ -1,0 +1,57 @@
+version: 2.1
+workflows:
+  Build and Test Workflow:
+    jobs:
+      - Build and Test:
+          matrix:
+            parameters:
+              java: [8, 11]
+              # - TEST_SUITE=1 # This may currently be broken
+              test_suite: [2, 3, 4, 5, 6, 7, 8, 9, 10]
+          filters:
+            tags:
+              only: /.*/
+      - Deploy:
+          requires:
+            - Build and Test
+          filters:
+            tags:
+              only: /^\d+\.\d+\.\d+$/
+            branches:
+              ignore: /.*/
+
+jobs:
+  Build and Test:
+    description: Build and Test - JDK << parameters.java >> - Test Suite << parameters.test_suite >>
+    parameters:
+      java:
+        type: integer
+      test_suite:
+        type: integer
+    machine:
+      image: android:202102-01
+    resource_class: large
+    environment:
+      GRADLE_OPTS: -Dorg.gradle.console=plain -Dorg.gradle.jvmargs=-XX:MaxMetaspaceSize=512m
+      ADB_INSTALL_TIMEOUT: 3
+    steps:
+      - checkout
+      - run: sudo apt-get update && sudo apt-get install openjdk-<< parameters.java >>-jdk
+      - run: java -version
+      - run: ./gradlew -p android-emulator-plugin
+      - store_test_results:
+          path: android-emulator-plugin/build/reports
+      - run: ./validate_plugin << parameters.test_suite >>
+      - store_test_results:
+          path: example-android-project/build/reports
+  Deploy:
+    description: Deploy the plugin
+    machine:
+      image: android:202102-01
+    environment:
+      GRADLE_OPTS: -Dorg.gradle.console=plain -Dorg.gradle.jvmargs=-XX:MaxMetaspaceSize=512m
+    steps:
+      - checkout
+      - run: sudo apt-get update && sudo apt-get install openjdk-8-jdk
+      - run: java -version
+      - run: ./gradlew -p android-emulator-plugin publishPlugins -Pgradle.publish.key=$GRADLE_PUBLISH_KEY -Pgradle.publish.secret=$GRADLE_PUBLISH_SECRET
