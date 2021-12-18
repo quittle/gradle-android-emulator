@@ -20,7 +20,7 @@ function should_run_target() {
 function kill_emulator() {
     pkill emulator || true
     pkill emulator64-arm || true
-    pkill emulator64-x86|| true
+    pkill emulator64-x86 || true
     rm -f ./example-android-project/build/android-avd-root/*/*.lock
 }
 
@@ -32,7 +32,7 @@ rm -rf 'android-emulator-plugin/build'
 # Plugin locally to be consumed by example project
 ./gradlew -p android-emulator-plugin publishToMavenLocal
 
-# ADB install may take longer than normal in Travis due to the low-power machine
+# ADB install may take longer than normal in CI due to potentially low-power machines
 export ADB_INSTALL_TIMEOUT=10
 
 # Add additional gradle options for testing
@@ -53,9 +53,9 @@ fi
 
 # Validate that the emulator is needed or the tests would fail due to a lack of devices
 if should_run_target 3; then
-    ENABLE_FOR_ANDROID_TESTS=false ./gradlew -p example-android-project connectedCheck && \
-            echo 'Build should not have succeeded' && exit 1 || \
-            echo 'Build failure expected due to "No connected devices!"'
+    ENABLE_FOR_ANDROID_TESTS=false ./gradlew -p example-android-project connectedCheck &&
+        echo 'Build should not have succeeded' && exit 1 ||
+        echo 'Build failure expected due to "No connected devices!"'
 fi
 
 # Use the old Gradle plugin
@@ -76,9 +76,9 @@ fi
 # Use the failed emulator starts don't hang forever
 if should_run_target 7; then
     FAIL_EMULATOR_STARTUP=true ./gradlew -p example-android-project assemble # Prove the flag doesn't fail the build
-    FAIL_EMULATOR_STARTUP=true ./gradlew -p example-android-project connectedCheck && \
-            echo 'Build should not have succeeded' && exit 1 || \
-            echo 'Build failure expected due to invalid emulator arguments'
+    FAIL_EMULATOR_STARTUP=true ./gradlew -p example-android-project connectedCheck &&
+        echo 'Build should not have succeeded' && exit 1 ||
+        echo 'Build failure expected due to invalid emulator arguments'
 fi
 
 # Use the emulator's device field by specifying the device type

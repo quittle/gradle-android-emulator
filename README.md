@@ -14,6 +14,7 @@ The minimum requirement for consumption is to simply
 [apply this plugin](https://plugins.gradle.org/plugin/com.quittle.android-emulator).
 
 #### build.gradle
+
 ```groovy
 // Consume from Gradle plugin repository. This is the only required step.
 plugins {
@@ -77,6 +78,7 @@ plugin being locally available so the `android-emulator-plugin` project must be 
 locally first.
 
 In general, to build and test locally.
+
 ```
 $ ./gradlew -p android-emulator-plugin # This runs all the default tasks
 $ ./gradlew -p android-emulator-plugin publishToMavenLocal # Publishes it for the example-android-project to consume
@@ -84,11 +86,12 @@ $ ./validate_plugin # Integration test to validate the plugin works
 ```
 
 ## Deployment
-This package is deployed via [Travis CI](https://travis-ci.com/quittle/gradle-android-emulator).
-See `.travis.yml` for the CI/CD setup.
 
-In the configuration for the build on Travis, `GRADLE_PUBLISH_KEY` and `GRADLE_PUBLISH_SECRET` are
-injected as secret environment variables.
+This package is deployed via [CircleCI](https://app.circleci.com/pipelines/github/quittle/gradle-android-emulator).
+See `.circleci/config.yml` for the CI/CD setup.
 
-Upon check-in to the `main` branch, Travis checks out and builds the plugin. When a commit is tagged, a new version of
+In the configuration for the project on CircleCI, `GRADLE_PUBLISH_KEY` and `GRADLE_PUBLISH_SECRET` are
+injected as environment variables.
+
+Upon check-in to the `main` branch, CircleCI checks out and builds the plugin. When a commit is tagged, a new version of
 the plugin will be released using the tag version number.
