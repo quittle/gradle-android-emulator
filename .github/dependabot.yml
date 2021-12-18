@@ -1,0 +1,15 @@
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: "/android-emulator-plugin"
+    schedule:
+      interval: weekly
+      day: friday
+      time: "18:00"
+      timezone: America/New_York
+    reviewers:
+      - quittle
+    assignees:
+      - quittle
+    labels:
+      - dependencies
