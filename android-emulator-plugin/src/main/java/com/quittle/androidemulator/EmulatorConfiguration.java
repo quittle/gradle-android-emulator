@@ -2,34 +2,40 @@ package com.quittle.androidemulator;
 
 import com.android.build.gradle.BaseExtension;
 import com.android.builder.model.ApiVersion;
-import com.google.common.collect.ImmutableMap;
 import org.apache.tools.ant.taskdefs.condition.Os;
 import org.gradle.api.Project;
-import org.gradle.util.VersionNumber;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public class EmulatorConfiguration {
     /**
-     * Paths to a folder containing {@code sdkmanager} relative to $SDK_ROOT. {@code null} entries indicate that the
-     * folder in the path should be a version number and to select the highest revision possible. This
-     * {@code sdkmanager} will be used to bootstrap the plugin and install a newer version. The earlier entries are
+     * Paths to a folder containing {@code sdkmanager} relative to $SDK_ROOT.
+     * {@code null} entries indicate that the
+     * folder in the path should be a version number and to select the highest
+     * revision possible. This
+     * {@code sdkmanager} will be used to bootstrap the plugin and install a newer
+     * version. The earlier entries are
      * preferred over later ones.
      */
     private static final String[][] POTENTIAL_INITIAL_SDK_MANAGER_PATHS = new String[][] {
-            // This is used if cmdline-tools is downloaded separately and copied into $SDK_ROOT
-            new String[] {"cmdline-tools", "tools", "bin"},
+            // This is used if cmdline-tools is downloaded separately and copied into
+            // $SDK_ROOT
+            new String[] { "cmdline-tools", "tools", "bin" },
             // This is used when cmdline-tools;latest is installed via sdkmanager
-            new String[] {"cmdline-tools", "latest", "bin"},
-            // This is used when a specific version of the cmdline-tools package is installed via sdkmanager
-            new String[] {"cmdline-tools", null, "bin"},
-            // This is used when the sdkmanager is provided by the legacy sdk tools which haven't been updated in years.
-            new String[] {"tools", "bin"},
+            new String[] { "cmdline-tools", "latest", "bin" },
+            // This is used when a specific version of the cmdline-tools package is
+            // installed via sdkmanager
+            new String[] { "cmdline-tools", null, "bin" },
+            // This is used when the sdkmanager is provided by the legacy sdk tools which
+            // haven't been updated in years.
+            new String[] { "tools", "bin" },
     };
 
     private final File sdkRoot;
@@ -46,7 +52,8 @@ public class EmulatorConfiguration {
     private final String deviceType;
     private Integer emulatorPort;
 
-    EmulatorConfiguration(final Project project, final BaseExtension androidExtension, final AndroidEmulatorExtension androidEmulatorExtension) {
+    EmulatorConfiguration(final Project project, final BaseExtension androidExtension,
+            final AndroidEmulatorExtension androidEmulatorExtension) {
         this.sdkRoot = androidExtension.getSdkDirectory();
 
         if (androidEmulatorExtension.getAvdRoot() != null) {
@@ -60,10 +67,12 @@ public class EmulatorConfiguration {
                     "because Android plugin has not been initialized with an SDK root.");
         }
 
-        this.environmentVariableMap = ImmutableMap.of(
-                "ANDROID_SDK_ROOT", sdkRoot.getAbsolutePath(),
-                "ANDROID_HOME", sdkRoot.getAbsolutePath(),
-                "ANDROID_AVD_HOME", avdRoot.getAbsolutePath());
+        final Map<String, String> environmentVariableMap = new HashMap<>();
+        environmentVariableMap.put("ANDROID_SDK_ROOT", sdkRoot.getAbsolutePath());
+        environmentVariableMap.put("ANDROID_HOME", sdkRoot.getAbsolutePath());
+        environmentVariableMap.put("ANDROID_AVD_HOME", avdRoot.getAbsolutePath());
+        this.environmentVariableMap = Collections.unmodifiableMap(environmentVariableMap);
+
         this.enableForAndroidTests = androidEmulatorExtension.getEnableForAndroidTests();
 
         this.additionalEmulatorArguments = new ArrayList<>();
@@ -119,14 +128,9 @@ public class EmulatorConfiguration {
                 if (children == null || children.length == 0) {
                     return null;
                 }
-
-                Arrays.sort(children, (a, b) -> {
-                    final VersionNumber aVersion = VersionNumber.parse(a.getName());
-                    final VersionNumber bVersion = VersionNumber.parse(b.getName());
-                    return aVersion.compareTo(bVersion);
-                });
-
-                path = children[children.length - 1];
+                path = Arrays.stream(children)
+                        .max((a, b) -> new VersionComparator().compare(a.getName(), b.getName()))
+                        .orElseThrow();
             }
         }
 
@@ -142,11 +146,13 @@ public class EmulatorConfiguration {
     }
 
     /**
-     * Provides the initial {@code sdkmanager} used to install the latest version, retrieved later by this plugin via
-     * {@link #getCmdLineToolsSdkManager}.
+     * Provides the initial {@code sdkmanager} used to install the latest version,
+     * retrieved later by this plugin via {@link #getCmdLineToolsSdkManager}.
      *
-     * @return The {@code sdkmanager} file location, which is guaranteed to exist and be a file if returned.
-     * @throws RuntimeException if no {@code sdkmanager} to use can be found on disk.
+     * @return The {@code sdkmanager} file location, which is guaranteed to exist
+     *         and be a file if returned.
+     * @throws RuntimeException if no {@code sdkmanager} to use can be found on
+     *                          disk.
      */
     public File getSdkManager() throws RuntimeException {
         for (final String[] path : POTENTIAL_INITIAL_SDK_MANAGER_PATHS) {
@@ -243,9 +249,11 @@ public class EmulatorConfiguration {
     }
 
     /**
-     * When the plugin starts the emulator, it should bind it to a specify a port in the range 5554 to 5682 and call
-     * this method to set it for other tasks to use.
-     * See https://developer.android.com/studio/run/emulator-commandline#common for more details.
+     * When the plugin starts the emulator, it should bind it to a specify a port in
+     * the range 5554 to 5682 and call this method to set it for other tasks to use.
+     * See https://developer.android.com/studio/run/emulator-commandline#common for
+     * more details.
+     *
      * @param port The port to be bound to the emulator.
      */
     public void setEmulatorPort(final int port) {
@@ -253,8 +261,11 @@ public class EmulatorConfiguration {
     }
 
     /**
-     * The port the emulator was bound to in the range 5554 to 5682. Note that if bound the port will always be even.
-     * See https://developer.android.com/studio/run/emulator-commandline#common for more details.
+     * The port the emulator was bound to in the range 5554 to 5682. Note that if
+     * bound the port will always be even.
+     * See https://developer.android.com/studio/run/emulator-commandline#common for
+     * more details.
+     *
      * @return The port the emulator should be bound to or null if not bound yet.
      */
     public Integer getEmulatorPort() {

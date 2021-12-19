@@ -3,7 +3,6 @@ package com.quittle.androidemulator.task;
 import com.quittle.androidemulator.EmulatorConfiguration;
 import org.gradle.api.Action;
 import org.gradle.api.Task;
-import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import java.io.File;
@@ -31,7 +30,7 @@ public class InstallSdkDependenciesTask extends AndroidEmulatorBaseExecTask<Inst
         }
 
         @Override
-        public void execute(@NotNull Task task) {
+        public void execute(Task task) {
             if (!emulatorConfiguration.getEmulator().setExecutable(true)) {
                 throw new RuntimeException("Unable to make android emulator executable");
             }

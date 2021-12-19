@@ -165,9 +165,11 @@ public class AndroidEmulatorExtension {
 
     /**
      * Helper method for cloning a potentially null array
+     *
      * @param arr The array to clone
      * @param <T> The type of array
-     * @return {@code null} if {@code arr} is {@code null}, otherwise a copy of the input array
+     * @return {@code null} if {@code arr} is {@code null}, otherwise a copy of the
+     *         input array
      */
     @SuppressFBWarnings("PZLA_PREFER_ZERO_LENGTH_ARRAYS")
     private static <T> T[] clone(final T[] arr) {
@@ -179,9 +181,11 @@ public class AndroidEmulatorExtension {
 
     /**
      * Helper method for converting a collection to an array
+     *
      * @param collection The array to convert
-     * @return {@code null} if {@code collection} is {@code null}, otherwise an array containing the
-     * contents of {@code collection}.
+     * @return {@code null} if {@code collection} is {@code null}, otherwise an
+     *         array containing the
+     *         contents of {@code collection}.
      */
     @SuppressFBWarnings("PZLA_PREFER_ZERO_LENGTH_ARRAYS")
     private static String[] toArray(final Collection<String> collection) {

@@ -20,8 +20,8 @@ import static io.mockk.MockKKt.every;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
-@SuppressWarnings({"PMD.AvoidDuplicateLiterals"})
-@ExtendWith({MockitoExtension.class, MockKExtension.class})
+@SuppressWarnings({ "PMD.AvoidDuplicateLiterals" })
+@ExtendWith({ MockitoExtension.class, MockKExtension.class })
 class EmulatorConfigurationTest {
     @Mock
     private Project mockProject;
@@ -101,7 +101,8 @@ class EmulatorConfigurationTest {
 
     @Test
     void testGetSdkManager_preferValidVersions() {
-        // Despite having many options for versions, only the valid version should be chosen
+        // Despite having many options for versions, only the valid version should be
+        // chosen
         makeSdkmanagerInTempDirectory("cmdline-tools", "invalid", "bin");
         makeSdkmanagerInTempDirectory("cmdline-tools", "0invalid", "bin");
         makeSdkmanagerInTempDirectory("cmdline-tools", "1invalid", "bin");
@@ -157,7 +158,8 @@ class EmulatorConfigurationTest {
     }
 
     /**
-     * Asserts that calling {@link EmulatorConfiguration#getSdkManager()} throws an exception.
+     * Asserts that calling {@link EmulatorConfiguration#getSdkManager()} throws an
+     * exception.
      */
     private void assertGetSdkManagerThrows() {
         final RuntimeException exception = assertThrows(RuntimeException.class, () -> configuration.getSdkManager());
@@ -180,8 +182,9 @@ class EmulatorConfigurationTest {
     }
 
     /**
-     * Deletes a file and its parent directories recursively. Deletes up the tree as long as there are no other
-     * children.
+     * Deletes a file and its parent directories recursively. Deletes up the tree as
+     * long as there are no other children.
+     *.
      * @param file The file to delete
      */
     private static void deleteFile(final File file) {
@@ -189,7 +192,7 @@ class EmulatorConfigurationTest {
         final File parent = file.getParentFile();
         if (parent != null) {
             final String[] children = parent.list();
-            if (children != null && children.length == 0){
+            if (children != null && children.length == 0) {
                 deleteFile(parent);
             }
         }

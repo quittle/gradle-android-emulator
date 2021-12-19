@@ -1,6 +1,8 @@
 .gradle/
 build/
 local.properties
+android-emulator-plugin/bin/
+*.class
 *.iml
 .idea/
 */gradle*
