@@ -24,8 +24,6 @@ workflows:
 
       - Dependabot Auto-Merge:
           context: github-cli
-          requires:
-            - Build and Test
           filters:
             branches:
               only: /dependabot\/.*/
@@ -79,6 +77,6 @@ jobs:
             gh pr review $CIRCLE_PULL_REQUEST --comment --body "$message"
             exit 1;
           else
-            gh pr review $CIRCLE_PULL_REQUEST --comment --body "Confirmed dependabot identity. Approving!"
+            gh pr review $CIRCLE_PULL_REQUEST --comment --body "[Bot] Confirmed dependabot identity. @dependabot merge"
             gh pr review $CIRCLE_PULL_REQUEST --approve
           fi
