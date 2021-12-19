@@ -5,10 +5,18 @@ workflows:
   Build and Test Workflow:
     jobs:
       - Build and Test:
+          name: smoketest
+          java: 8
+          test_suite: 1
+          filters:
+            tags:
+              only: /.*/
+      - Build and Test:
+          requires:
+            - smoketest
+          java: 11
           matrix:
             parameters:
-              java: [8, 11]
-              # - TEST_SUITE=1 # This may currently be broken
               test_suite: [2, 3, 4, 5, 6, 7, 8, 9, 10]
           filters:
             tags:
@@ -24,6 +32,8 @@ workflows:
 
       - Dependabot Auto-Merge:
           context: github-cli
+          requires:
+            - smoketest
           filters:
             branches:
               only: /dependabot\/.*/
@@ -38,7 +48,7 @@ jobs:
         type: integer
     machine:
       image: android:202102-01
-    resource_class: large
+    resource_class: medium
     environment:
       GRADLE_OPTS: -Dorg.gradle.console=plain -Dorg.gradle.jvmargs=-XX:MaxMetaspaceSize=512m
       ADB_INSTALL_TIMEOUT: 3
