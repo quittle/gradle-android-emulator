@@ -63,7 +63,7 @@ pluginBundle {
 }
 
 dependencies {
-    implementation 'com.android.tools.build:gradle:4.1.0'
+    implementation 'com.android.tools.build:gradle:7.0.4'
     implementation 'commons-io:commons-io:2.8.0'
 
     compileOnly 'com.google.code.findbugs:annotations:3.0.1'
