@@ -106,7 +106,8 @@ public class AndroidRepositories {
         final String errorMessage = "Unable to find android home directory";
         try {
             try {
-                return AndroidLocationsSingleton.INSTANCE.getPrefsLocation().toFile();
+                final File folder = AndroidLocationsSingleton.INSTANCE.getPrefsLocation().toFile();
+                return new File(folder, "repositories.cfg");
             } catch (final AndroidLocationsException e) {
                 throw new AndroidRepositoryException(errorMessage, e);
             }
