@@ -184,7 +184,7 @@ class EmulatorConfigurationTest {
     /**
      * Deletes a file and its parent directories recursively. Deletes up the tree as
      * long as there are no other children.
-     *.
+     *
      * @param file The file to delete
      */
     private static void deleteFile(final File file) {
