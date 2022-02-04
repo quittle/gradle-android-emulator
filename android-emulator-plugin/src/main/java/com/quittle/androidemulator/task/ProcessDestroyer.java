@@ -24,7 +24,7 @@ class ProcessDestroyer implements UnaryOperator<Process> {
     @Override
     public Process apply(final Process process) {
         if (process != null) {
-			List<ProcessHandle> descendants = process.descendants().collect(Collectors.toList());
+            List<ProcessHandle> descendants = process.descendants().collect(Collectors.toList());
             // Use a non-forceful destroy first to allow the process to gracefully shutdown. With the android emulator
             // this includes creating a snapshot of the current state for warm boots in subsequent runs. On unix-like
             // systems this usually translates to raising a SIGTERM signal.
@@ -38,8 +38,8 @@ class ProcessDestroyer implements UnaryOperator<Process> {
                     process.destroyForcibly();
                     process.waitFor(PROCESS_TERMINATION_TIMEOUT_SEC, TimeUnit.SECONDS);
                 }
-				// if a process has not destroyed descendants
-				descendants.forEach(ProcessHandle::destroyForcibly);
+                // if a process has not destroyed descendants
+                descendants.forEach(ProcessHandle::destroyForcibly);
             } catch (InterruptedException e) {
                 logger.debug("Interrupted while waiting for process to be destroyed", e);
                 // It is likely fine to allow the failure and move on. The termination of the gradle process might stop
