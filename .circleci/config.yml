@@ -1,6 +1,6 @@
 version: 2.1
 orbs:
-  circleci-github-cli: circleci/github-cli@1.1.0
+  circleci-github-cli: circleci/github-cli@2.0.0
 workflows:
   Build and Test Workflow:
     jobs:
@@ -56,7 +56,7 @@ jobs:
       test_suite:
         type: integer
     machine:
-      image: android:202102-01
+      image: cimg/android:2022.1.1
     resource_class: medium
     environment:
       GRADLE_OPTS: -Dorg.gradle.console=plain -Dorg.gradle.jvmargs=-XX:MaxMetaspaceSize=512m
@@ -74,7 +74,7 @@ jobs:
   Deploy:
     description: Deploy the plugin
     machine:
-      image: android:202102-01
+      image: cimg/android:2022.1.1
     environment:
       GRADLE_OPTS: -Dorg.gradle.console=plain -Dorg.gradle.jvmargs=-XX:MaxMetaspaceSize=512m
     steps:
@@ -84,7 +84,7 @@ jobs:
       - run: ./gradlew -p android-emulator-plugin publishPlugins -Pgradle.publish.key=$GRADLE_PUBLISH_KEY -Pgradle.publish.secret=$GRADLE_PUBLISH_SECRET
   Dependabot Auto-Merge:
     docker:
-      - image: cimg/base:2021.12
+      - image: cimg/base:2022.02
     steps:
       - checkout
       - circleci-github-cli/install
