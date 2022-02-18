@@ -43,6 +43,7 @@ public class EmulatorConfiguration {
     private final Map<String, String> environmentVariableMap;
     private final boolean enableForAndroidTests;
     private final List<String> additionalEmulatorArguments;
+    private final List<String> additionalSdkManagerArguments;
     private final boolean logEmulatorOutput;
     private final String androidVersion;
     private final String flavor;
@@ -81,9 +82,17 @@ public class EmulatorConfiguration {
             additionalEmulatorArguments.add("-no-audio");
             additionalEmulatorArguments.add("-no-window");
         }
-        final String[] additionalArgs = androidEmulatorExtension.getAdditionalEmulatorArguments();
-        if (additionalArgs != null) {
-            additionalEmulatorArguments.addAll(Arrays.asList(additionalArgs));
+        final String[] additionalEmulatorArgs = androidEmulatorExtension.getAdditionalEmulatorArguments();
+        if (additionalEmulatorArgs != null) {
+            additionalEmulatorArguments.addAll(Arrays.asList(additionalEmulatorArgs));
+        }
+
+        final String[] additionalSdkManagerArgs = androidEmulatorExtension.getAdditionalSdkManagerArguments();
+        if (additionalSdkManagerArgs != null) {
+            additionalSdkManagerArguments = new ArrayList<>();
+            additionalSdkManagerArguments.addAll(Arrays.asList(additionalSdkManagerArgs));
+        } else {
+            additionalSdkManagerArguments = Collections.emptyList();
         }
 
         this.logEmulatorOutput = androidEmulatorExtension.getLogEmulatorOutput();
@@ -218,6 +227,10 @@ public class EmulatorConfiguration {
 
     public List<String> getAdditionalEmulatorArguments() {
         return additionalEmulatorArguments;
+    }
+
+    public List<String> getAdditionalSdkManagerArguments() {
+        return additionalSdkManagerArguments;
     }
 
     public boolean getLogEmulatorOutput() {

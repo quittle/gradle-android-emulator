@@ -85,6 +85,7 @@ public class AndroidEmulatorExtension {
     private boolean enableForAndroidTests = true;
     private boolean headless = false;
     private String[] additionalEmulatorArguments = null;
+    private String[] additionalSdkManagerArguments = null;
     private boolean logEmulatorOutput = false;
 
     public EmulatorExtension getEmulator() {
@@ -147,8 +148,28 @@ public class AndroidEmulatorExtension {
         this.additionalEmulatorArguments = toArray(additionalEmulatorArguments);
     }
 
+    public void additionalSdkManagerArguments(final String[] additionalSdkManagerArguments) {
+        this.additionalSdkManagerArguments = clone(additionalSdkManagerArguments);
+    }
+
+    public void additionalSdkManagerArguments(final Collection<String> additionalSdkManagerArguments) {
+        this.additionalSdkManagerArguments = toArray(additionalSdkManagerArguments);
+    }
+
+    public void setAdditionalSdkManagerArguments(final String[] additionalSdkManagerArguments) {
+        this.additionalSdkManagerArguments = clone(additionalSdkManagerArguments);
+    }
+
+    public void setAdditionalSdkManagerArguments(final Collection<String> additionalSdkManagerArguments) {
+        this.additionalSdkManagerArguments = toArray(additionalSdkManagerArguments);
+    }
+
     public String[] getAdditionalEmulatorArguments() {
         return clone(this.additionalEmulatorArguments);
+    }
+
+    public String[] getAdditionalSdkManagerArguments() {
+        return clone(this.additionalSdkManagerArguments);
     }
 
     public void logEmulatorOutput(final boolean logEmulatorOutput) {
