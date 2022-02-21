@@ -41,6 +41,7 @@ androidEmulator {
     enableForAndroidTests false // Defaults to true
     avdRoot '~/.android/avd' // Defaults to be <gradle-build-dir>/android-avd-root
     headless true // Defaults to false but should be set to true for most CI systems
+    additionalSdkManagerArguments '--proxy=http', '--proxy_host=56.78.90.12', '--proxy_port=1234' // Additional arguments to pass to the sdkmanager when used to install dependencies. See https://developer.android.com/studio/command-line/sdkmanager#options for options
     additionalEmulatorArguments '-no-snapshot', '-http-proxy=localhost:1234' // Additional arguments to pass to the emulator at startup. See https://developer.android.com/studio/run/emulator-commandline#startup-options for options
     logEmulatorOutput true // Defaults to false but can be enabled to have emulator output logged for debugging.
 }
