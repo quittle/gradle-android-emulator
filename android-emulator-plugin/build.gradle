@@ -72,7 +72,7 @@ dependencies {
 
     testImplementation 'io.mockk:mockk:1.12.4'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
-    testImplementation 'org.mockito:mockito-junit-jupiter:4.6.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:4.6.1'
 }
 
 test {
