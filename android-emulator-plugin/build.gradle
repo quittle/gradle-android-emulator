@@ -70,7 +70,7 @@ dependencies {
     compileOnly 'com.google.code.findbugs:annotations:3.0.1'
     testCompileOnly 'com.google.code.findbugs:annotations:3.0.1'
 
-    testImplementation 'io.mockk:mockk:1.12.5'
+    testImplementation 'io.mockk:mockk:1.12.7'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.0'
     testImplementation 'org.mockito:mockito-junit-jupiter:4.7.0'
 }
