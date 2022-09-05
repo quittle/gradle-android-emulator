@@ -13,7 +13,7 @@ import org.eclipse.jgit.api.Git
 
 plugins {
     id 'com.github.spotbugs' version '5.0.10'
-    id 'com.gradle.plugin-publish' version '0.21.0'
+    id 'com.gradle.plugin-publish' version '1.0.0'
     id 'java-gradle-plugin'
     id 'maven-publish'
     id 'pmd'
@@ -36,6 +36,7 @@ gradlePlugin {
         androidEmulatorPlugin {
             id = 'com.quittle.android-emulator'
             implementationClass = 'com.quittle.androidemulator.AndroidEmulatorPlugin'
+            displayName = 'Automated Android Emulator for easing development and testing'
         }
     }
 }
@@ -54,12 +55,6 @@ pluginBundle {
     vcsUrl = 'https://github.com/quittle/gradle-android-emulator'
     description = 'Automatically installs and sets up the Android emulator for easy running of instrumentation tests.'
     tags = ['android', 'android emulator', 'emulator', 'automation', 'instrumentation']
-
-    plugins {
-        androidEmulatorPlugin {
-            displayName = 'Automated Android Emulator for easing development and testing'
-        }
-    }
 }
 
 dependencies {
