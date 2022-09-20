@@ -38,12 +38,12 @@ export ADB_INSTALL_TIMEOUT=10
 # Add additional gradle options for testing
 export GRADLE_OPTS="${GRADLE_OPTS} -Dorg.gradle.logging.level=info"
 
-# Run the test on the default (for the project) emulator as well as using the new Gradle plugin with an older SDK version
+# Run the test on the default (for the project) emulator as well as using an older SDK version
 # Run one after the other to ensure the plugin handles changing of configuration.
 if should_run_target 1; then
     ./gradlew -p example-android-project connectedCheck
     kill_emulator
-    ANDROID_GRADLE_VERSION=3.2.1 ANDROID_GRADLE_VERSION_NEW=true ANDROID_EMULATOR_SDK_VERSION=21 ./gradlew -p example-android-project connectedCheck
+    ANDROID_EMULATOR_SDK_VERSION=21 ./gradlew -p example-android-project connectedCheck
 fi
 
 # Use a google_apis flavor
@@ -58,23 +58,18 @@ if should_run_target 3; then
         echo 'Build failure expected due to "No connected devices!"'
 fi
 
-# Use the old Gradle plugin
-if should_run_target 4; then
-    ANDROID_GRADLE_VERSION=2.3.3 ANDROID_GRADLE_VERSION_NEW=false ANDROID_EMULATOR_GOOGLE_APIS=true ANDROID_EMULATOR_SDK_VERSION=24 ./gradlew -p example-android-project connectedCheck
-fi
-
 # Use a newer version of Gradle plugin
-if should_run_target 5; then
-    ANDROID_GRADLE_VERSION=3.4.0 ANDROID_GRADLE_VERSION_NEW=true ANDROID_EMULATOR_GOOGLE_APIS=true ANDROID_EMULATOR_SDK_VERSION=24 ./gradlew -p example-android-project connectedCheck
+if should_run_target 4; then
+    ANDROID_GRADLE_VERSION=7.1.0 ANDROID_EMULATOR_GOOGLE_APIS=true ANDROID_EMULATOR_SDK_VERSION=24 ./gradlew -p example-android-project connectedCheck
 fi
 
 # Use the logEmulatorOutput flag
-if should_run_target 6; then
+if should_run_target 5; then
     LOG_ANDROID_EMULATOR=true ANDROID_EMULATOR_SDK_VERSION=24 ANDROID_EMULATOR_GOOGLE_APIS=true ./gradlew -p example-android-project connectedCheck
 fi
 
 # Use the failed emulator starts don't hang forever
-if should_run_target 7; then
+if should_run_target 6; then
     FAIL_EMULATOR_STARTUP=true ./gradlew -p example-android-project assemble # Prove the flag doesn't fail the build
     FAIL_EMULATOR_STARTUP=true ./gradlew -p example-android-project connectedCheck &&
         echo 'Build should not have succeeded' && exit 1 ||
@@ -82,16 +77,16 @@ if should_run_target 7; then
 fi
 
 # Use the emulator's device field by specifying the device type
-if should_run_target 8; then
+if should_run_target 7; then
     ANDROID_EMULATOR_SDK_VERSION=24 ANDROID_EMULATOR_DEVICE=pixel_xl ./gradlew -p example-android-project connectedCheck
 fi
 
 # Use the device field by specifying the device code
-if should_run_target 9; then
+if should_run_target 8; then
     ANDROID_EMULATOR_SDK_VERSION=24 ANDROID_EMULATOR_DEVICE=19 ./gradlew -p example-android-project connectedCheck
 fi
 
 # Use the latest Gradle plugin
-if should_run_target 10; then
-    ANDROID_GRADLE_VERSION=4.0.1 ANDROID_GRADLE_VERSION_NEW=true ANDROID_EMULATOR_GOOGLE_APIS=true ANDROID_EMULATOR_SDK_VERSION=24 ./gradlew -p example-android-project connectedCheck
+if should_run_target 9; then
+    ANDROID_GRADLE_VERSION=7.3.0 ANDROID_EMULATOR_GOOGLE_APIS=true ANDROID_EMULATOR_SDK_VERSION=24 ./gradlew -p example-android-project connectedCheck
 fi

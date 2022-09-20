@@ -58,14 +58,20 @@ pluginBundle {
 }
 
 dependencies {
-    implementation 'com.android.tools.build:gradle:7.3.0'
-    implementation 'com.android.tools:common:30.3.0'
+    compileOnly 'com.android.tools:common:30.3.0'
+    def ANDROID_GRADLE_PLUGIN_VERSION = '7.3.0'
+    compileOnly "com.android.tools.build:gradle:$ANDROID_GRADLE_PLUGIN_VERSION"
     implementation 'commons-io:commons-io:2.8.0'
 
     compileOnly 'com.google.code.findbugs:annotations:3.0.1'
     testCompileOnly 'com.google.code.findbugs:annotations:3.0.1'
 
     testImplementation 'io.mockk:mockk:1.12.8'
+    testImplementation "com.android.tools.build:gradle:$ANDROID_GRADLE_PLUGIN_VERSION"
+
+    // implementation 'com.android.tools:common:30.3.0'
+
+
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.0'
     testImplementation 'org.mockito:mockito-junit-jupiter:4.8.0'
 }
