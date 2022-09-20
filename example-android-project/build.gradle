@@ -1,7 +1,6 @@
 buildscript {
     final Map<String, String> env = System.getenv()
-    project.ext.ANDROID_GRADLE_VERSION = env.getOrDefault('ANDROID_GRADLE_VERSION', '3.2.1')
-    project.ext.ANDROID_GRADLE_VERSION_NEW = Boolean.valueOf(env.getOrDefault('ANDROID_GRADLE_VERSION_NEW', 'true'))
+    project.ext.ANDROID_GRADLE_VERSION = env.getOrDefault('ANDROID_GRADLE_VERSION', '7.0.0')
     project.ext.ANDROID_EMULATOR_SDK_VERSION = Integer.valueOf(env.getOrDefault('ANDROID_EMULATOR_SDK_VERSION', '21'))
     project.ext.ANDROID_EMULATOR_GOOGLE_APIS = Boolean.valueOf(env.getOrDefault('ANDROID_EMULATOR_GOOGLE_APIS', 'false'))
     project.ext.ANDROID_EMULATOR_ABI = env.getOrDefault('ANDROID_EMULATOR_ABI', 'x86')
@@ -45,24 +44,17 @@ android {
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
 
-    if (ANDROID_GRADLE_VERSION_NEW) {
-        testOptions {
-            execution 'ANDROIDX_TEST_ORCHESTRATOR'
-        }
+    testOptions {
+        execution 'ANDROIDX_TEST_ORCHESTRATOR'
     }
 
     useLibrary 'android.test.runner'
 }
 
 dependencies {
-    if (ANDROID_GRADLE_VERSION_NEW) {
-        androidTestImplementation 'androidx.test:runner:1.3.0'
-        androidTestImplementation 'androidx.test.ext:junit:1.1.2'
-        androidTestUtil 'androidx.test:orchestrator:1.3.0'
-    } else {
-        androidTestCompile 'androidx.test:runner:1.3.0'
-        androidTestCompile 'androidx.test.ext:junit:1.1.2'
-    }
+    androidTestImplementation 'androidx.test:runner:1.3.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestUtil 'androidx.test:orchestrator:1.3.0'
 }
 
 androidEmulator {
