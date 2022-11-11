@@ -13,7 +13,7 @@ import org.eclipse.jgit.api.Git
 
 plugins {
     id 'com.github.spotbugs' version '5.0.13'
-    id 'com.gradle.plugin-publish' version '1.0.0'
+    id 'com.gradle.plugin-publish' version '1.1.0'
     id 'java-gradle-plugin'
     id 'maven-publish'
     id 'pmd'
