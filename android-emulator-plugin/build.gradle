@@ -68,11 +68,8 @@ dependencies {
 
     testImplementation 'io.mockk:mockk:1.13.2'
     testImplementation "com.android.tools.build:gradle:$ANDROID_GRADLE_PLUGIN_VERSION"
-
-    // implementation 'com.android.tools:common:30.3.0'
-
-
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.9.1'
     testImplementation 'org.mockito:mockito-junit-jupiter:4.8.1'
 }
 

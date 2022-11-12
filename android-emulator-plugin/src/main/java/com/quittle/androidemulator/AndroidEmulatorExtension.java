@@ -16,7 +16,7 @@ public class AndroidEmulatorExtension {
         private String name = null;
         private String device = null;
         private int sdkVersion = -1;
-        private String abi = "x86";
+        private String abi = ArchitectureUtils.getEmulatorAbiString();;
         private boolean includeGoogleApis = false;
 
         public String getName() {
