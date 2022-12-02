@@ -66,7 +66,7 @@ dependencies {
     compileOnly 'com.google.code.findbugs:annotations:3.0.1'
     testCompileOnly 'com.google.code.findbugs:annotations:3.0.1'
 
-    testImplementation 'io.mockk:mockk:1.13.2'
+    testImplementation 'io.mockk:mockk:1.13.3'
     testImplementation "com.android.tools.build:gradle:$ANDROID_GRADLE_PLUGIN_VERSION"
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.9.1'
