@@ -58,7 +58,7 @@ pluginBundle {
 }
 
 dependencies {
-    compileOnly 'com.android.tools:common:30.4.1'
+    compileOnly 'com.android.tools:common:30.4.2'
     def ANDROID_GRADLE_PLUGIN_VERSION = '7.4.1'
     compileOnly "com.android.tools.build:gradle:$ANDROID_GRADLE_PLUGIN_VERSION"
     implementation 'commons-io:commons-io:2.8.0'
