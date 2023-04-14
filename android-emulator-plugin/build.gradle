@@ -70,7 +70,7 @@ dependencies {
     testImplementation "com.android.tools.build:gradle:$ANDROID_GRADLE_PLUGIN_VERSION"
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.9.2'
-    testImplementation 'org.mockito:mockito-junit-jupiter:5.2.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.3.0'
 }
 
 test {
