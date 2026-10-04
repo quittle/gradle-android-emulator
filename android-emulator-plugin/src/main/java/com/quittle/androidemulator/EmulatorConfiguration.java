@@ -3,6 +3,7 @@ package com.quittle.androidemulator;
 import com.android.build.gradle.BaseExtension;
 import com.android.builder.model.ApiVersion;
 import org.apache.tools.ant.taskdefs.condition.Os;
+import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 
 import java.io.File;
@@ -55,6 +56,12 @@ public class EmulatorConfiguration {
 
     EmulatorConfiguration(final Project project, final BaseExtension androidExtension,
             final AndroidEmulatorExtension androidEmulatorExtension) {
+        if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {
+            throw new RuntimeException("Unable to initialize com.quittle.android-emulator " +
+                    "because it requires JDK 17 or later (the Android cmdline-tools require " +
+                    "it); the current JVM is " + JavaVersion.current() + ".");
+        }
+
         this.sdkRoot = androidExtension.getSdkDirectory();
 
         if (androidEmulatorExtension.getAvdRoot() != null) {

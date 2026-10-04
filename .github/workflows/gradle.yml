@@ -1,0 +1,110 @@
+name: Build and Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    tags:
+      # Approximates CircleCI's /^\d+\.\d+\.\d+$/; globs can't express it exactly.
+      - '[0-9]*.[0-9]*.[0-9]*'
+
+env:
+  GRADLE_OPTS: -Dorg.gradle.console=plain -Dorg.gradle.jvmargs=-XX:MaxMetaspaceSize=512m
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: microsoft
+          java-version: 17
+
+      - name: Build plugin and run unit tests
+        run: ./gradlew -p android-emulator-plugin
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-reports
+          path: android-emulator-plugin/build/reports
+
+  validate:
+    name: validate (${{ matrix.test_suite }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: [build]
+    strategy:
+      fail-fast: false
+      matrix:
+        # Suite 4 doesn't exist upstream. Suites 3 and 6 are negative tests;
+        # validate_plugin asserts the expected failures and exits 0.
+        test_suite: [1, 2, 3, 5, 6, 7, 8, 9]
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: microsoft
+          java-version: 17
+
+      - name: Enable KVM for the Android emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      # No emulator-runner action: the plugin boots and tears down its own emulator.
+      # validate_plugin publishes the plugin to mavenLocal itself; unit tests
+      # already ran in the build job.
+      - name: Validate plugin (suite ${{ matrix.test_suite }})
+        run: ./validate_plugin ${{ matrix.test_suite }}
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: validate-reports-suite-${{ matrix.test_suite }}
+          path: example-android-project/build/reports
+
+  ci-success:
+    name: ci-success
+    if: always()
+    needs: [build, validate]
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          if [ "${{ needs.build.result }}" != "success" ] || [ "${{ needs.validate.result }}" != "success" ]; then
+            echo "CI failed: build=${{ needs.build.result }} validate=${{ needs.validate.result }}"
+            exit 1
+          fi
+          echo "All CI jobs passed."
+
+  deploy:
+    name: deploy
+    if: github.ref_type == 'tag'
+    needs: [ci-success]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: microsoft
+          java-version: 17
+
+      - name: Deploy plugin to Gradle Plugin Portal
+        run: ./gradlew -p android-emulator-plugin publishPlugins -Pgradle.publish.key=$GRADLE_PUBLISH_KEY -Pgradle.publish.secret=$GRADLE_PUBLISH_SECRET
+        env:
+          GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
+          GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
