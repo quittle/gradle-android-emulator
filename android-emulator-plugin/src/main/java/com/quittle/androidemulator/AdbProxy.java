@@ -36,7 +36,7 @@ public class AdbProxy {
 
             // Capture the stdout and throw away the stderr. Default is to forward to the process's stdout/stderr
             execSpec.setStandardOutput(stdout);
-            execSpec.setErrorOutput(NullOutputStream.NULL_OUTPUT_STREAM);
+            execSpec.setErrorOutput(NullOutputStream.INSTANCE);
         });
 
         // Assert it ran successfully
