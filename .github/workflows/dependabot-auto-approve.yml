@@ -1,12 +1,6 @@
 # Source: https://docs.github.com/en/code-security/tutorials/secure-your-dependencies/automating-dependabot-with-github-actions#automatically-approving-a-pull-request
 name: Dependabot Auto-Approve
-on:
-  pull_request:
-  workflow_dispatch:
-    inputs:
-      pr_url:
-        description: 'URL of the Dependabot PR to approve and auto-merge'
-        required: true
+on: pull_request
 
 permissions:
   pull-requests: write
@@ -15,12 +9,12 @@ permissions:
 jobs:
   dependabot:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.user.login == 'dependabot[bot]' || github.event_name == 'workflow_dispatch'
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
     steps:
       - name: Approve and auto-merge
         run: |
           gh pr review --approve "$PR_URL"
           gh pr merge --rebase --auto --delete-branch "$PR_URL"
         env:
-          PR_URL: ${{ github.event.pull_request.html_url || inputs.pr_url }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
