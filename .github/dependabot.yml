@@ -3,13 +3,14 @@ updates:
   - package-ecosystem: gradle
     directory: "/android-emulator-plugin"
     schedule:
-      interval: weekly
-      day: friday
-      time: "18:00"
-      timezone: America/New_York
-    reviewers:
-      - quittle
-    assignees:
-      - quittle
+      interval: monthly
     labels:
       - dependencies
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
