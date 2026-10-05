@@ -4,16 +4,18 @@ buildscript {
     }
 
     dependencies {
-        classpath 'org.eclipse.jgit:org.eclipse.jgit:7.8.0.202609011348-r'
+        classpath 'org.eclipse.jgit:org.eclipse.jgit:6.6.0.202305301015-r'
     }
 }
 
+import com.github.spotbugs.snom.Confidence
+import com.github.spotbugs.snom.Effort
 import com.github.spotbugs.snom.SpotBugsTask
 import org.eclipse.jgit.api.Git
 
 plugins {
-    id 'com.github.spotbugs' version '5.0.14'
-    id 'com.gradle.plugin-publish' version '2.2.1'
+    id 'com.github.spotbugs' version '6.5.12'
+    id 'com.gradle.plugin-publish' version '1.2.0'
     id 'java-gradle-plugin'
     id 'maven-publish'
     id 'pmd'
@@ -61,7 +63,7 @@ dependencies {
     compileOnly 'com.android.tools:common:31.0.2'
     def ANDROID_GRADLE_PLUGIN_VERSION = '8.0.2'
     compileOnly "com.android.tools.build:gradle:$ANDROID_GRADLE_PLUGIN_VERSION"
-    implementation 'commons-io:commons-io:2.22.0'
+    implementation 'commons-io:commons-io:2.8.0'
 
     compileOnly 'com.google.code.findbugs:annotations:3.0.1'
     testCompileOnly 'com.google.code.findbugs:annotations:3.0.1'
@@ -99,8 +101,8 @@ javadoc {
 }
 
 spotbugs {
-    effort 'max'
-    reportLevel 'low'
+    effort = Effort.valueOf('MAX')
+    reportLevel = Confidence.valueOf('LOW')
     excludeFilter = file('configuration/spotbugs-exclude.xml')
 }
 

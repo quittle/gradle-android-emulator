@@ -2,6 +2,7 @@ package com.quittle.androidemulator.task;
 
 import com.quittle.androidemulator.EmulatorConfiguration;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.GradleException;
 import org.gradle.api.tasks.TaskAction;
 
 import javax.inject.Inject;
@@ -37,7 +38,7 @@ public class WaitForAndroidEmulatorTask extends DefaultTask {
             waitForDeviceProcess.set(p);
             p.waitFor();
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Unable to wait for emulator", e);
+            throw new GradleException("Unable to wait for emulator", e);
         }
     }
 }

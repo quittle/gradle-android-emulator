@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 
 import static io.mockk.MockKKt.every;
 import static org.junit.jupiter.api.Assertions.*;
@@ -177,7 +178,7 @@ class EmulatorConfigurationTest {
             assertTrue(sdkmanager.createNewFile());
             return sdkmanager;
         } catch (final IOException e) {
-            throw new RuntimeException(e);
+            throw new UncheckedIOException(e);
         }
     }
 
