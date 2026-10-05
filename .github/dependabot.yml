@@ -4,7 +4,6 @@ updates:
     directory: "/android-emulator-plugin"
     schedule:
       interval: monthly
-    open-pull-requests-limit: 5
     labels:
       - dependencies
   - package-ecosystem: github-actions
