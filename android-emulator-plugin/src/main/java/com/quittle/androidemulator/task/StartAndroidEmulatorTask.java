@@ -109,7 +109,7 @@ public class StartAndroidEmulatorTask extends DefaultTask {
             Runtime.getRuntime().addShutdownHook(new Thread(() ->
                     emulatorProcess.getAndUpdate(new ProcessDestroyer(getProject()))));
         } catch (final IOException e) {
-            throw new RuntimeException("Emulator failed to start successfully", e);
+            throw new GradleException("Emulator failed to start successfully", e);
         }
     }
 

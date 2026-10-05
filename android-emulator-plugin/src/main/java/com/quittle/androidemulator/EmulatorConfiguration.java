@@ -3,6 +3,7 @@ package com.quittle.androidemulator;
 import com.android.build.gradle.BaseExtension;
 import com.android.builder.model.ApiVersion;
 import org.apache.tools.ant.taskdefs.condition.Os;
+import org.gradle.api.GradleException;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 
@@ -15,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
-public class EmulatorConfiguration {
+public final class EmulatorConfiguration {
     /**
      * Paths to a folder containing {@code sdkmanager} relative to $SDK_ROOT.
      * {@code null} entries indicate that the
@@ -57,7 +58,7 @@ public class EmulatorConfiguration {
     EmulatorConfiguration(final Project project, final BaseExtension androidExtension,
             final AndroidEmulatorExtension androidEmulatorExtension) {
         if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {
-            throw new RuntimeException("Unable to initialize com.quittle.android-emulator " +
+            throw new GradleException("Unable to initialize com.quittle.android-emulator " +
                     "because it requires JDK 17 or later (the Android cmdline-tools require " +
                     "it); the current JVM is " + JavaVersion.current() + ".");
         }
@@ -68,11 +69,6 @@ public class EmulatorConfiguration {
             this.avdRoot = androidEmulatorExtension.getAvdRoot();
         } else {
             this.avdRoot = new File(project.getBuildDir(), "android-avd-root");
-        }
-
-        if (this.sdkRoot == null) {
-            throw new RuntimeException("Unable to initialize com.quittle.android-emulator " +
-                    "because Android plugin has not been initialized with an SDK root.");
         }
 
         final Map<String, String> environmentVariableMap = new HashMap<>();
@@ -185,7 +181,7 @@ public class EmulatorConfiguration {
                 }
             }
         }
-        throw new RuntimeException("Unable to find a valid sdkmanager to use.");
+        throw new GradleException("Unable to find a valid sdkmanager to use.");
     }
 
     public File getCmdLineToolsSdkManager() {

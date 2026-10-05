@@ -1,6 +1,7 @@
 package com.quittle.androidemulator.task;
 
 import org.gradle.api.DefaultTask;
+import org.gradle.api.GradleException;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
 
@@ -17,7 +18,7 @@ public abstract class EnsureFilesAreExecutableTask extends DefaultTask {
             // In some environments your process is not an owner of the file and can't change permission.
             // For example docker or some CI systems in which case these files must already be executable.
             if (!(file.canExecute() || file.setExecutable(true))) {
-                throw new RuntimeException(String.format("Unable to ensure %s is executable", file.getName()));
+                throw new GradleException(String.format("Unable to ensure %s is executable", file.getName()));
             }
         }
     }
