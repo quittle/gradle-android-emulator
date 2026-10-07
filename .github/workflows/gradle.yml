@@ -3,8 +3,7 @@ name: Build and Test
 on:
   pull_request:
   push:
-    branches:
-      - main
+    # Run on all branches (all commits); deploy job below still gates on tags.
     tags:
       # Approximates CircleCI's /^\d+\.\d+\.\d+$/; globs can't express it exactly.
       - '[0-9]*.[0-9]*.[0-9]*'
