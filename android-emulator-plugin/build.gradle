@@ -67,10 +67,10 @@ dependencies {
 
     testImplementation 'io.mockk:mockk:1.13.5'
     testImplementation "com.android.tools.build:gradle:$ANDROID_GRADLE_PLUGIN_VERSION"
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.13.4'
-    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.13.4'
+    testImplementation 'org.junit.jupiter:junit-jupiter:6.1.3'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:6.1.3'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.24.0'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.13.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:6.1.3'
 }
 
 test {
@@ -89,7 +89,7 @@ tasks.withType(SpotBugsTask) {
 }
 
 javadoc {
-    failOnError = true
+    failOnError true
     options.addStringOption 'Xwerror', '-quiet' // See https://stackoverflow.com/a/49544352
     options.addStringOption 'Xdoclint:-missing', '-quiet'
 
@@ -106,7 +106,7 @@ spotbugs {
 
 pmd {
     ruleSetFiles = files("configuration/pmd.xml")
-    consoleOutput = true
+    consoleOutput true
     ruleSets = []
 }
 
