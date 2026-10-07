@@ -89,11 +89,19 @@ jobs:
 
   deploy:
     name: deploy
+    # Only deploy on version tags matching the push trigger pattern ([0-9]*.[0-9]*.[0-9]*).
     if: github.ref_type == 'tag'
     needs: [ci-success]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
+      - name: Validate release tag pattern
+        run: |
+          if ! [[ "${{ github.ref_name }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Tag '${{ github.ref_name }}' does not match the release pattern (X.Y.Z); skipping deploy."
+            exit 1
+          fi
+
       - uses: actions/checkout@v7
 
       - name: Set up JDK 17
