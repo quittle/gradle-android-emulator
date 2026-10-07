@@ -68,7 +68,7 @@ public final class EmulatorConfiguration {
         if (androidEmulatorExtension.getAvdRoot() != null) {
             this.avdRoot = androidEmulatorExtension.getAvdRoot();
         } else {
-            this.avdRoot = new File(project.getBuildDir(), "android-avd-root");
+            this.avdRoot = project.getLayout().getBuildDirectory().dir("android-avd-root").get().getAsFile();
         }
 
         final Map<String, String> environmentVariableMap = new HashMap<>();
@@ -86,17 +86,10 @@ public final class EmulatorConfiguration {
             additionalEmulatorArguments.add("-no-window");
         }
         final String[] additionalEmulatorArgs = androidEmulatorExtension.getAdditionalEmulatorArguments();
-        if (additionalEmulatorArgs != null) {
-            additionalEmulatorArguments.addAll(Arrays.asList(additionalEmulatorArgs));
-        }
+        additionalEmulatorArguments.addAll(Arrays.asList(additionalEmulatorArgs));
 
         final String[] additionalSdkManagerArgs = androidEmulatorExtension.getAdditionalSdkManagerArguments();
-        if (additionalSdkManagerArgs != null) {
-            additionalSdkManagerArguments = new ArrayList<>();
-            additionalSdkManagerArguments.addAll(Arrays.asList(additionalSdkManagerArgs));
-        } else {
-            additionalSdkManagerArguments = Collections.emptyList();
-        }
+        additionalSdkManagerArguments = new ArrayList<>(Arrays.asList(additionalSdkManagerArgs));
 
         this.logEmulatorOutput = androidEmulatorExtension.getLogEmulatorOutput();
 

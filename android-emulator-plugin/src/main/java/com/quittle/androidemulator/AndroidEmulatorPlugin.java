@@ -30,33 +30,28 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
     }
 
     private static void createEnsurePermissionsTasks(final Project project, final EmulatorConfiguration emulatorConfiguration) {
-        project.getTasks().create(ENSURE_BASE_SDK_PERMISSIONS_TASK_NAME, EnsureBaseSdkPermissions.class, emulatorConfiguration);
+        project.getTasks().register(ENSURE_BASE_SDK_PERMISSIONS_TASK_NAME, EnsureBaseSdkPermissions.class, emulatorConfiguration);
 
-        final Task ensureInstalledSdkPermissionsTask = project.getTasks().create(ENSURE_INSTALLED_SDK_PERMISSIONS_TASK_NAME, EnsureInstalledSdkPermissionsTask.class, emulatorConfiguration);
-        ensureInstalledSdkPermissionsTask.dependsOn(INSTALL_SDK_DEPENDENCIES_TASK_NAME);
+        project.getTasks().register(ENSURE_INSTALLED_SDK_PERMISSIONS_TASK_NAME, EnsureInstalledSdkPermissionsTask.class, emulatorConfiguration).configure(task -> task.dependsOn(INSTALL_SDK_DEPENDENCIES_TASK_NAME));
     }
 
     private static void createAddAdditionalSdkRepositoriesTask(final Project project) {
-        project.getTasks().create(ADD_ADDITIONAL_SDK_REPOSITORIES_TASK_NAME, AddAdditionalSdkRepositoriesTask.class);
+        project.getTasks().register(ADD_ADDITIONAL_SDK_REPOSITORIES_TASK_NAME, AddAdditionalSdkRepositoriesTask.class);
     }
 
     private static void createInstallSdkDependenciesTask(final Project project, final EmulatorConfiguration emulatorConfiguration) {
-        final Task task = project.getTasks().create(INSTALL_SDK_DEPENDENCIES_TASK_NAME, InstallSdkDependenciesTask.class, emulatorConfiguration);
-        task.dependsOn(ENSURE_BASE_SDK_PERMISSIONS_TASK_NAME);
+        project.getTasks().register(INSTALL_SDK_DEPENDENCIES_TASK_NAME, InstallSdkDependenciesTask.class, emulatorConfiguration).configure(task -> task.dependsOn(ENSURE_BASE_SDK_PERMISSIONS_TASK_NAME));
     }
 
     private static void createInstallEmulatorSystemImageTask(final Project project, final EmulatorConfiguration emulatorConfiguration) {
-        final Task task = project.getTasks().create(INSTALL_ANDROID_EMULATOR_SYSTEM_IMAGE_TASK_NAME, InstallAndroidEmulatorSystemImageTask.class, emulatorConfiguration);
-        task.dependsOn(ENSURE_INSTALLED_SDK_PERMISSIONS_TASK_NAME, ADD_ADDITIONAL_SDK_REPOSITORIES_TASK_NAME);
+        project.getTasks().register(INSTALL_ANDROID_EMULATOR_SYSTEM_IMAGE_TASK_NAME, InstallAndroidEmulatorSystemImageTask.class, emulatorConfiguration).configure(task -> task.dependsOn(ENSURE_INSTALLED_SDK_PERMISSIONS_TASK_NAME, ADD_ADDITIONAL_SDK_REPOSITORIES_TASK_NAME));
     }
 
     private static void createCreateEmulatorTask(final Project project, final EmulatorConfiguration emulatorConfiguration) {
-        final Task createEmulatorTask = project.getTasks().create(
-                CREATE_ANDROID_EMULATOR_TASK_NAME, CreateEmulatorExecTask.class, emulatorConfiguration);
-        createEmulatorTask.dependsOn(
+        project.getTasks().register(CREATE_ANDROID_EMULATOR_TASK_NAME, CreateEmulatorExecTask.class, emulatorConfiguration).configure(task -> task.dependsOn(
                 INSTALL_ANDROID_EMULATOR_SYSTEM_IMAGE_TASK_NAME,
                 INSTALL_SDK_DEPENDENCIES_TASK_NAME,
-                ENSURE_INSTALLED_SDK_PERMISSIONS_TASK_NAME);
+                ENSURE_INSTALLED_SDK_PERMISSIONS_TASK_NAME));
     }
 
     private static void createEmulatorLifecycleTasks(final Project project, final EmulatorConfiguration emulatorConfiguration, final AdbProxy adbProxy) {
@@ -74,24 +69,22 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
             final AdbProxy adbProxy,
             final AtomicReference<Process> emulatorProcess,
             final AtomicReference<Process> waitForDeviceProcess) {
-        final Task task = project.getTasks().create(START_ANDROID_EMULATOR_TASK_NAME, StartAndroidEmulatorTask.class,
-                emulatorConfiguration, adbProxy, emulatorProcess, waitForDeviceProcess);
-
-        task.dependsOn(ENSURE_INSTALLED_SDK_PERMISSIONS_TASK_NAME, INSTALL_SDK_DEPENDENCIES_TASK_NAME, CREATE_ANDROID_EMULATOR_TASK_NAME);
-        task.finalizedBy(STOP_ANDROID_EMULATOR_TASK_NAME);
+        project.getTasks().register(START_ANDROID_EMULATOR_TASK_NAME, StartAndroidEmulatorTask.class,
+                emulatorConfiguration, adbProxy, emulatorProcess, waitForDeviceProcess).configure(task -> {
+            task.dependsOn(ENSURE_INSTALLED_SDK_PERMISSIONS_TASK_NAME, INSTALL_SDK_DEPENDENCIES_TASK_NAME, CREATE_ANDROID_EMULATOR_TASK_NAME);
+            task.finalizedBy(STOP_ANDROID_EMULATOR_TASK_NAME);
+        });
     }
 
     private static void createWaitForEmulatorTask(final Project project, final EmulatorConfiguration emulatorConfiguration, final AtomicReference<Process> waitForDeviceProcess) {
-        final Task task = project.getTasks().create(WAIT_FOR_ANDROID_EMULATOR_TASK_NAME, WaitForAndroidEmulatorTask.class, emulatorConfiguration, waitForDeviceProcess);
-
-        task.dependsOn(ENSURE_BASE_SDK_PERMISSIONS_TASK_NAME, START_ANDROID_EMULATOR_TASK_NAME);
+        project.getTasks().register(WAIT_FOR_ANDROID_EMULATOR_TASK_NAME, WaitForAndroidEmulatorTask.class, emulatorConfiguration, waitForDeviceProcess).configure(task -> task.dependsOn(ENSURE_BASE_SDK_PERMISSIONS_TASK_NAME, START_ANDROID_EMULATOR_TASK_NAME));
     }
 
     private static void createStopEmulatorTask(final Project project, final AtomicReference<Process> emulatorProcess) {
-        final Task task = project.getTasks().create(STOP_ANDROID_EMULATOR_TASK_NAME, StopAndroidEmulatorTask.class, emulatorProcess);
-
-        task.dependsOn(ENSURE_INSTALLED_SDK_PERMISSIONS_TASK_NAME, START_ANDROID_EMULATOR_TASK_NAME);
-        task.mustRunAfter(WAIT_FOR_ANDROID_EMULATOR_TASK_NAME);
+        project.getTasks().register(STOP_ANDROID_EMULATOR_TASK_NAME, StopAndroidEmulatorTask.class, emulatorProcess).configure(task -> {
+            task.dependsOn(ENSURE_INSTALLED_SDK_PERMISSIONS_TASK_NAME, START_ANDROID_EMULATOR_TASK_NAME);
+            task.mustRunAfter(WAIT_FOR_ANDROID_EMULATOR_TASK_NAME);
+        });
     }
 
     @Override
@@ -106,7 +99,7 @@ public class AndroidEmulatorPlugin implements Plugin<Project> {
             }
 
             final EmulatorConfiguration emulatorConfiguration = new EmulatorConfiguration(project, androidExtension, extension);
-            final AdbProxy adbProxy = new AdbProxy(project, emulatorConfiguration);
+            final AdbProxy adbProxy = project.getObjects().newInstance(AdbProxy.class, project, emulatorConfiguration);
 
             if (emulatorConfiguration.getEnableForAndroidTests()) {
                 setUpAndroidTests(p);

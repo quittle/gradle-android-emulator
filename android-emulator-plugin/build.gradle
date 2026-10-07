@@ -34,11 +34,15 @@ version = Git.open(project.rootDir.parentFile)
         .call()
 
 gradlePlugin {
+    website = 'https://github.com/quittle/gradle-android-emulator'
+    vcsUrl = 'https://github.com/quittle/gradle-android-emulator'
     plugins {
         androidEmulatorPlugin {
             id = 'com.quittle.android-emulator'
             implementationClass = 'com.quittle.androidemulator.AndroidEmulatorPlugin'
             displayName = 'Automated Android Emulator for easing development and testing'
+            description = 'Automatically installs and sets up the Android emulator for easy running of instrumentation tests.'
+            tags = ['android', 'android emulator', 'emulator', 'automation', 'instrumentation']
         }
     }
 }
@@ -50,13 +54,6 @@ publishing {
             from components.java
         }
     }
-}
-
-pluginBundle {
-    website = 'https://github.com/quittle/gradle-android-emulator'
-    vcsUrl = 'https://github.com/quittle/gradle-android-emulator'
-    description = 'Automatically installs and sets up the Android emulator for easy running of instrumentation tests.'
-    tags = ['android', 'android emulator', 'emulator', 'automation', 'instrumentation']
 }
 
 dependencies {
@@ -85,8 +82,8 @@ tasks.withType(JavaCompile) {
 
 tasks.withType(SpotBugsTask) {
     reports {
-        xml.enabled = false
-        html.enabled = true
+        xml.required = false
+        html.required = true
     }
 }
 

@@ -1,8 +1,5 @@
 <?xml version="1.0"?>
 <ruleset name="Custom Ruleset">
     <description>Custom</description>
-    <rule ref="category/java/errorprone.xml">
-        <exclude name="BeanMembersShouldSerialize"/>
-        <exclude name="DataflowAnomalyAnalysis"/>
-    </rule>
+    <rule ref="category/java/errorprone.xml"/>
 </ruleset>
