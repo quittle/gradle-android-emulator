@@ -3,6 +3,8 @@ package com.quittle.androidemulator;
 import org.apache.commons.io.output.NullOutputStream;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
+import org.gradle.process.ExecOperations;
+import javax.inject.Inject;
 import org.gradle.process.ExecResult;
 
 import java.io.ByteArrayOutputStream;
@@ -13,10 +15,13 @@ import java.util.Arrays;
  * Provides a simplified abstraction of running ADB commands.
  */
 public class AdbProxy {
+    private final ExecOperations execOperations;
     private final Project project;
     private final EmulatorConfiguration emulatorConfiguration;
 
-    public AdbProxy(final Project project, final EmulatorConfiguration emulatorConfiguration) {
+    @Inject
+    public AdbProxy(final ExecOperations execOperations, final Project project, final EmulatorConfiguration emulatorConfiguration) {
+        this.execOperations = execOperations;
         this.project = project;
         this.emulatorConfiguration = emulatorConfiguration;
     }
@@ -29,7 +34,7 @@ public class AdbProxy {
      */
     public String[] execute(String... arguments) throws GradleException {
         final ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-        final ExecResult result = project.exec(execSpec -> {
+        final ExecResult result = execOperations.exec(execSpec -> {
             execSpec.setExecutable(emulatorConfiguration.getAdb());
             execSpec.setArgs(Arrays.asList(arguments));
             execSpec.setEnvironment(emulatorConfiguration.getEnvironmentVariableMap());

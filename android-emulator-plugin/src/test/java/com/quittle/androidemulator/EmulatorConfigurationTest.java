@@ -5,6 +5,12 @@ import com.android.build.gradle.internal.dsl.DefaultConfig;
 import io.mockk.impl.annotations.MockK;
 import io.mockk.junit5.MockKExtension;
 import org.gradle.api.Project;
+import org.gradle.api.file.Directory;
+import org.gradle.api.file.ProjectLayout;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.file.Directory;
+import org.gradle.api.file.ProjectLayout;
+import org.gradle.api.provider.Provider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.OS;
@@ -26,6 +32,14 @@ import static org.mockito.Mockito.when;
 class EmulatorConfigurationTest {
     @Mock
     private Project mockProject;
+    @Mock
+    private ProjectLayout mockLayout;
+    @Mock
+    private org.gradle.api.file.DirectoryProperty mockDirProperty;
+    @Mock
+    private Provider<Directory> mockProvider;
+    @Mock
+    private Directory mockDirectory;
     @MockK
     private BaseExtension mockBaseExtension;
     @Mock
@@ -44,6 +58,13 @@ class EmulatorConfigurationTest {
         every(_scope -> mockBaseExtension.getSdkDirectory()).returns(tempDir);
         every(_scope -> mockBaseExtension.getDefaultConfig()).returns(mockDefaultConfig);
         when(mockAndroidEmulatorExtension.getEmulator()).thenReturn(mockEmulatorExtension);
+        when(mockAndroidEmulatorExtension.getAdditionalEmulatorArguments()).thenReturn(new String[0]);
+        when(mockAndroidEmulatorExtension.getAdditionalSdkManagerArguments()).thenReturn(new String[0]);
+        when(mockProject.getLayout()).thenReturn(mockLayout);
+        when(mockLayout.getBuildDirectory()).thenReturn(mockDirProperty);
+        when(mockDirProperty.dir("android-avd-root")).thenReturn(mockProvider);
+        when(mockProvider.get()).thenReturn(mockDirectory);
+        when(mockDirectory.getAsFile()).thenReturn(new File(tempDir, "android-avd-root"));
         configuration = new EmulatorConfiguration(mockProject, mockBaseExtension, mockAndroidEmulatorExtension);
     }
 
